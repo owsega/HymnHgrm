@@ -32,11 +32,9 @@ public class HymnDetailActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Snackbar.make(view, R.string.no_audio, Snackbar.LENGTH_SHORT).show();
             }
         });
-        fab.hide();
 
         // Show the Up button in the action bar.
         ActionBar actionBar = getSupportActionBar();
@@ -57,8 +55,8 @@ public class HymnDetailActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putString(HymnDetailFragment.ARG_ITEM_ID,
-                    getIntent().getStringExtra(HymnDetailFragment.ARG_ITEM_ID));
+            arguments.putInt(HymnDetailFragment.ARG_ITEM_ID,
+                    getIntent().getIntExtra(HymnDetailFragment.ARG_ITEM_ID, 1));
             HymnDetailFragment fragment = new HymnDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
