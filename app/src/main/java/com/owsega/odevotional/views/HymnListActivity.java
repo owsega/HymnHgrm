@@ -15,6 +15,7 @@ import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,6 +39,7 @@ import java.lang.ref.WeakReference;
 public class HymnListActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final int HYMN_LOADER_ID = 1;
+    private static final String SEARCH_QUERY = "search_query";
     /**
      * previously selected view
      * It's used for toggling the higlighted list item when in two-pane mode
@@ -58,12 +60,18 @@ public class HymnListActivity extends AppCompatActivity implements LoaderManager
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hymn_list);
 
+        // initialize data
         HymnHelper.initHymns(this, true);
         getSupportLoaderManager().initLoader(HYMN_LOADER_ID, null, this);
 
+        // initialize views
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
+
+        View searchView = findViewById(R.id.searchView);
+        assert searchView != null;
+        setupSearchView((SearchView) searchView);
 
         View recyclerView = findViewById(R.id.hymn_list);
         assert recyclerView != null;
@@ -100,16 +108,52 @@ public class HymnListActivity extends AppCompatActivity implements LoaderManager
         recyclerView.setAdapter(mAdapter);
     }
 
+    private void setupSearchView(@NonNull final SearchView searchView) {
+        searchView.setIconifiedByDefault(false);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            Bundle args = new Bundle();
+
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                args.putString(SEARCH_QUERY, query);
+                getSupportLoaderManager().restartLoader(HYMN_LOADER_ID, args, HymnListActivity.this);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String text) {
+                if (text.trim().length() > 0)
+                    args.putString(SEARCH_QUERY, text);
+                else
+                    args.putString(SEARCH_QUERY, null);
+                getSupportLoaderManager().restartLoader(HYMN_LOADER_ID, args, HymnListActivity.this);
+                return false;
+            }
+        });
+    }
+
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Uri uri = HymnContract.Entry.CONTENT_URI;
 
-        return new CursorLoader(this, uri, null, null, null, null);
+        String selection = null;
+        String[] selectionArgs = null;
+        String sortOrder = HymnContract.Entry.COL_HYMN_TITLE + " ASC"; //todo could use hymn id dependin on settings
+
+        if (args != null && args.containsKey(SEARCH_QUERY)) {
+            selection = args.getString(SEARCH_QUERY, null);
+            if (selection != null) {
+                selectionArgs = new String[]{"%" + selection + "%"};
+                selection = HymnContract.Entry.COL_HYMN_TITLE + " LIKE ?";  //todo could use hymn content dependin on settings
+            }
+        }
+        return new CursorLoader(this, uri, null, selection, selectionArgs, sortOrder);
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         mAdapter.mCursorAdapter.changeCursor(data);
+        mAdapter.notifyDataSetChanged();
     }
 
     @Override

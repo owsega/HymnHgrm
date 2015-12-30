@@ -180,8 +180,8 @@ public class HymnProvider extends ContentProvider {
                     HymnContract.Entry.TABLE_NAME + " (" +
                     HymnContract.Entry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                     HymnContract.Entry.COL_HYMN_ID + " INTEGER UNIQUE, " +
-                    HymnContract.Entry.COL_HYMN_CONTENT + " TEXT NOT NULL, " +
-                    HymnContract.Entry.COL_HYMN_TITLE + " TEXT NOT NULL, " +
+                    HymnContract.Entry.COL_HYMN_CONTENT + " TEXT NOT NULL COLLATE NOCASE, " +
+                    HymnContract.Entry.COL_HYMN_TITLE + " TEXT NOT NULL COLLATE NOCASE, " +
                     HymnContract.Entry.COL_STANZA_COUNT + " INTEGER, " +
                     HymnContract.Entry.COL_HAS_CHORUS + " BOOLEAN"
                     + " );";
