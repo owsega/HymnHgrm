@@ -12,9 +12,7 @@
     tools:context=".views.HymnListActivity">
 
     <!--
-    This layout is a two-pane layout for the Hymns
-    master/detail flow.
-    
+    This layout is a two-pane layout for the Hymns master/detail flow.
     -->
 
     <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"

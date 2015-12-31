@@ -41,8 +41,6 @@ public class HymnDetailFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         if (getArguments().containsKey(ARG_ITEM_ID)) {
-            //todo Load the content specified by the fragment arguments. In a real-world scenario, use a Loader
-            // to load content from a content provider.
             Hymn mItem = HymnHelper.get(getActivity().getContentResolver(), getArguments().getInt(ARG_ITEM_ID));
 
             content = mItem.details;
