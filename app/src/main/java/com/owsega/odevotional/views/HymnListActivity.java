@@ -30,7 +30,7 @@ import android.widget.TextView;
 
 import com.owsega.odevotional.R;
 import com.owsega.odevotional.data.HymnContract;
-import com.owsega.odevotional.model.HymnHelper;
+import com.owsega.odevotional.data.HymnsHelper;
 
 import java.lang.ref.WeakReference;
 
@@ -90,7 +90,7 @@ public class HymnListActivity extends AppCompatActivity implements LoaderManager
         };
 
         // initialize data
-        HymnHelper.initHymns(this, true);
+        HymnsHelper.processText(this);
         getSupportLoaderManager().initLoader(HYMN_LOADER_ID, null, this);
 
         // initialize views
@@ -282,7 +282,7 @@ public class HymnListActivity extends AppCompatActivity implements LoaderManager
 
                                 // do highlight and de-highlight
                                 v.animate().alpha(0.5f).setDuration(500).start();
-                                if (previousSelected != null)
+                                if (previousSelected != null && previousSelected.get() != null)
                                     previousSelected.get().animate().alpha(1).setDuration(500).start();
                                 previousSelected = new WeakReference<>(v);
                             } else {

@@ -10,8 +10,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.owsega.odevotional.R;
-import com.owsega.odevotional.model.HymnHelper;
-import com.owsega.odevotional.model.HymnHelper.Hymn;
+import com.owsega.odevotional.data.HymnsHelper;
+import com.owsega.odevotional.data.HymnsHelper.Hymn;
 
 /**
  * A fragment representing a single Hymn detail screen.
@@ -41,15 +41,15 @@ public class HymnDetailFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         if (getArguments().containsKey(ARG_ITEM_ID)) {
-            Hymn mItem = HymnHelper.get(getActivity().getContentResolver(), getArguments().getInt(ARG_ITEM_ID));
+            Hymn mItem = HymnsHelper.get(getActivity().getContentResolver(), getArguments().getInt(ARG_ITEM_ID));
 
             content = mItem.details;
-            title = mItem.title;
+            title = mItem.id + "    " + mItem.title;
 
             Activity activity = this.getActivity();
             CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
             if (appBarLayout != null) {
-                appBarLayout.setTitle(mItem.title);
+                appBarLayout.setTitle(title);
             }
         }
     }
