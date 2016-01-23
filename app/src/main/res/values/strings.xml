@@ -1,10 +1,9 @@
 <resources>
-    <string name="app_name">O\'Devotional</string>
-    <string name="description">Provides daily Bible reading and hymn lyrics for the devotional mind
-        of a youth with a vision</string>
+    <string name="app_name">Hymn</string>
+    <string name="description">Sacred Songs for the Soul (Holy Ghost Revival Mission Hymn Book)</string>
 
     <string name="title_hymn_list">Hymns</string>
-    <string name="title_hymn_detail">Hymn Detail</string>
+    <string name="title_hymn_detail">Lyrics</string>
     <string name="no_audio">Audio support not available for this hymn yet</string>
     <string name="no_hymn_selected">Please select a hymn from the list</string>
     <string name="action_settings">Settings</string>
