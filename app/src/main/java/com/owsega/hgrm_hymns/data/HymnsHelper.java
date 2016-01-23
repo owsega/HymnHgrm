@@ -1,11 +1,17 @@
 package com.owsega.hgrm_hymns.data;
 
+import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.util.Log;
+
+import com.owsega.hgrm_hymns.R;
+import com.owsega.hgrm_hymns.views.HymnListActivity;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,100 +30,6 @@ public class HymnsHelper {
 
     static StringBuilder nextHymn = new StringBuilder();
 
-    public static void processText(Context context, boolean force) {
-        // exit, if we are not to force-update the db when it has stuffs in it already.
-        if (!force && dbHasStuffsAlready(context))
-            return;
-
-        String file;
-        String endOfLinePattern = "####";
-        String newSongFormat = "%03d";
-
-        String[] songs = new String[307];
-        String[] titles = new String[307];
-        try {
-            file = getStringFromStream(context.getAssets().open("Hymns.txt"));
-
-            String[] lines = file.split(endOfLinePattern);
-
-            int songsSoFar = 0;
-            String nextSong;
-            for (String line : lines) {
-                nextSong = String.format(newSongFormat, songsSoFar + 1);
-                if (line.contains(nextSong)) { // if we have a new song
-                    songs[songsSoFar] = nextHymn.toString();
-
-                    songsSoFar++;
-
-                    // remove dots and numbers from title
-                    line = line.replace(".", "");
-                    Scanner sc = new Scanner(line);
-                    sc.nextInt();
-                    titles[songsSoFar] = sc.nextLine().trim().toUpperCase();
-                    nextHymn = new StringBuilder();
-                } else {
-                    nextHymn.append(line).append("\n");
-                }
-            }
-            // flush last song out
-            songs[songsSoFar] = nextHymn.toString();
-
-            Log.e("seyi", "all songs: " + songs.length);
-            putHymnsInDb(context, songs, titles);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static boolean dbHasStuffsAlready(Context context) {
-        Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
-        if (cursor != null) {
-            if (cursor.getCount() > 0)
-                return true;
-            cursor.close();
-        }
-        return false;
-    }
-
-    private static void putHymnsInDb(Context context, String[] songs, String[] titles) {
-        ContentValues values;
-
-        context.getContentResolver().delete(uri, null, null);
-
-        for (int i = 1; i < songs.length; i++) {
-            values = new ContentValues();
-            values.put(HymnContract.Entry.COL_HYMN_ID, i);
-            values.put(HymnContract.Entry.COL_HYMN_TITLE, titles[i]);
-            values.put(HymnContract.Entry.COL_HAS_CHORUS, true);
-            values.put(HymnContract.Entry.COL_HYMN_CONTENT, songs[i]);
-            values.put(HymnContract.Entry.COL_STANZA_COUNT, 3);
-            if (context.getContentResolver().insert(uri, values) != null)
-                Log.e("seyi", "inserted hymn " + i);
-        }
-    }
-
-    /**
-     * This snippet reads all of the InputStream into a String.
-     *
-     * @throws IOException
-     */
-    private static String getStringFromStream(InputStream is) throws IOException {
-        String line;
-        StringBuilder total = new StringBuilder();
-
-        // Wrap a BufferedReader around the InputStream
-        BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-
-        // Read response until the end
-        while ((line = rd.readLine()) != null) {
-            total.append(line);
-        }
-
-        // Return full string
-        return total.toString();
-    }
-
     public static Hymn get(ContentResolver cr, int id) {
         Uri uri = HymnContract.Entry.CONTENT_URI;
         String selection = HymnContract.Entry.COL_HYMN_ID + " = ? ";
@@ -135,6 +47,135 @@ public class HymnsHelper {
             c.close();
         }
         return retVal;
+    }
+
+    /**
+     * sets the default settings in SharedPreferences and loads the db
+     */
+    public static class LoadDataTask extends AsyncTask<Void, Void, Void> {
+        private static final String LOG_TAG = "HymnsHelper";
+        ProgressDialog pDialog;
+        Context mContext;
+        boolean force;
+
+        public LoadDataTask(Context context, boolean _forceUpdate) {
+            mContext = context;
+            force = _forceUpdate;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            pDialog = ProgressDialog.show(mContext,
+                    mContext.getString(R.string.please_wait),
+                    mContext.getString(R.string.loading_hymns),
+                    true, false);
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            pDialog.dismiss();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            // exit, if we are not to force-update the db when it has stuffs in it already.
+            if (!force && dbHasStuffsAlready())
+                return null;
+
+            PreferenceManager.getDefaultSharedPreferences(mContext.getApplicationContext()).edit()
+                    .putBoolean(HymnListActivity.PREF_SEARCH_LYRICS, true)
+                    .putBoolean(HymnListActivity.PREF_SORT_BY_ID, true)
+                    .apply();
+
+            String file;
+            String endOfLinePattern = "####";
+            String newSongFormat = "%03d";
+
+            String[] songs = new String[307];
+            String[] titles = new String[307];
+            try {
+                file = getStringFromStream(mContext.getAssets().open("Hymns.txt"));
+
+                String[] lines = file.split(endOfLinePattern);
+
+                int songsSoFar = 0;
+                String nextSong;
+                for (String line : lines) {
+                    nextSong = String.format(newSongFormat, songsSoFar + 1);
+                    if (line.contains(nextSong)) { // if we have a new song
+                        songs[songsSoFar] = nextHymn.toString();
+
+                        songsSoFar++;
+
+                        // remove dots and numbers from title
+                        line = line.replace(".", "");
+                        Scanner sc = new Scanner(line);
+                        sc.nextInt();
+                        titles[songsSoFar] = sc.nextLine().trim().toUpperCase();
+                        nextHymn = new StringBuilder();
+                    } else {
+                        nextHymn.append(line).append("\n");
+                    }
+                }
+                // flush last song out
+                songs[songsSoFar] = nextHymn.toString();
+
+                Log.d(LOG_TAG, "all songs: " + songs.length);
+                putHymnsInDb(songs, titles);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        /**
+         * This snippet reads all of the InputStream into a String.
+         *
+         * @throws IOException
+         */
+        private String getStringFromStream(InputStream is) throws IOException {
+            String line;
+            StringBuilder total = new StringBuilder();
+
+            // Wrap a BufferedReader around the InputStream
+            BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+
+            // Read response until the end
+            while ((line = rd.readLine()) != null) {
+                total.append(line);
+            }
+
+            // Return full string
+            return total.toString();
+        }
+
+        private boolean dbHasStuffsAlready() {
+            Cursor cursor = mContext.getContentResolver().query(uri, null, null, null, null);
+            if (cursor != null) {
+                if (cursor.getCount() > 0)
+                    return true;
+                cursor.close();
+            }
+            return false;
+        }
+
+        private void putHymnsInDb(String[] songs, String[] titles) {
+            ContentValues values;
+
+            mContext.getContentResolver().delete(uri, null, null);
+
+            for (int i = 1; i < songs.length; i++) {
+                values = new ContentValues();
+                values.put(HymnContract.Entry.COL_HYMN_ID, i);
+                values.put(HymnContract.Entry.COL_HYMN_TITLE, titles[i]);
+                values.put(HymnContract.Entry.COL_HAS_CHORUS, true);
+                values.put(HymnContract.Entry.COL_HYMN_CONTENT, songs[i]);
+                values.put(HymnContract.Entry.COL_STANZA_COUNT, 3);
+                if (mContext.getContentResolver().insert(uri, values) != null)
+                    Log.d(LOG_TAG, "inserted hymn " + i);
+            }
+        }
     }
 
     /**

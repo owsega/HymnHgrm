@@ -45,10 +45,10 @@ import java.lang.ref.WeakReference;
 public class HymnListActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<Cursor>, View.OnClickListener {
 
+    public static final String PREF_SEARCH_LYRICS = "pref_search_lyrics";
+    public static final String PREF_SORT_BY_ID = "sort_by_hymn_id";
     private static final int HYMN_LOADER_ID = 1;
     private static final String SEARCH_QUERY = "search_query";
-    private static final String PREF_SEARCH_LYRICS = "pref_search_lyrics";
-    private static final String PREF_SORT_BY_ID = "sort_by_hymn_id";
     private static final String SORT_ALPHABETIC = HymnContract.Entry.COL_HYMN_TITLE + " ASC";
     private static final String SORT_NUMERIC = HymnContract.Entry.COL_HYMN_ID + " ASC";
     private static final String SEARCH_TITLES = HymnContract.Entry.COL_HYMN_TITLE + " LIKE ?";
@@ -84,14 +84,15 @@ public class HymnListActivity extends AppCompatActivity
         setContentView(R.layout.activity_hymn_list);
 
         // initialize settings
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences preferences = PreferenceManager
+                .getDefaultSharedPreferences(getApplicationContext());
         prefs = new boolean[]{
-                preferences.getBoolean(PREF_SEARCH_LYRICS, false),
-                preferences.getBoolean(PREF_SORT_BY_ID, false)
+                preferences.getBoolean(PREF_SEARCH_LYRICS, true),
+                preferences.getBoolean(PREF_SORT_BY_ID, true)
         };
 
         // initialize data
-        HymnsHelper.processText(this, false);
+        new HymnsHelper.LoadDataTask(this, false).execute();
         getSupportLoaderManager().initLoader(HYMN_LOADER_ID, null, this);
 
         // initialize views
@@ -221,7 +222,8 @@ public class HymnListActivity extends AppCompatActivity
     }
 
     private void showSettingsDialog() {
-        final SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+        final SharedPreferences.Editor editor = PreferenceManager
+                .getDefaultSharedPreferences(getApplicationContext()).edit();
 
         final CharSequence[] options = new CharSequence[]{
                 getString(R.string.pref_search_content),
