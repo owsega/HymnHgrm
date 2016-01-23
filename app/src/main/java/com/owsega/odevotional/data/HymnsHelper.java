@@ -20,9 +20,15 @@ import java.util.Scanner;
  */
 public class HymnsHelper {
 
+    static Uri uri = HymnContract.Entry.CONTENT_URI;
+
     static StringBuilder nextHymn = new StringBuilder();
 
-    public static void processText(Context context) {
+    public static void processText(Context context, boolean force) {
+        // exit, if we are not to force-update the db when it has stuffs in it already.
+        if (!force && dbHasStuffsAlready(context))
+            return;
+
         String file;
         String endOfLinePattern = "####";
         String newSongFormat = "%03d";
@@ -47,7 +53,7 @@ public class HymnsHelper {
                     line = line.replace(".", "");
                     Scanner sc = new Scanner(line);
                     sc.nextInt();
-                    titles[songsSoFar] = sc.nextLine().trim();
+                    titles[songsSoFar] = sc.nextLine().trim().toUpperCase();
                     nextHymn = new StringBuilder();
                 } else {
                     nextHymn.append(line).append("\n");
@@ -64,8 +70,17 @@ public class HymnsHelper {
         }
     }
 
+    private static boolean dbHasStuffsAlready(Context context) {
+        Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
+        if (cursor != null) {
+            if (cursor.getCount() > 0)
+                return true;
+            cursor.close();
+        }
+        return false;
+    }
+
     private static void putHymnsInDb(Context context, String[] songs, String[] titles) {
-        Uri uri = HymnContract.Entry.CONTENT_URI;
         ContentValues values;
 
         context.getContentResolver().delete(uri, null, null);

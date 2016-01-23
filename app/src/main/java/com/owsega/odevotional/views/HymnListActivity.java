@@ -50,9 +50,9 @@ public class HymnListActivity extends AppCompatActivity implements LoaderManager
     private static final String PREF_SORT_BY_ID = "sort_by_hymn_id";
     private static final String SORT_ALPHABETIC = HymnContract.Entry.COL_HYMN_TITLE + " ASC";
     private static final String SORT_NUMERIC = HymnContract.Entry.COL_HYMN_ID + " ASC";
-    //todo ::: use FTS (full text search queries) instead
     private static final String SEARCH_TITLES = HymnContract.Entry.COL_HYMN_TITLE + " LIKE ?";
     private static final String SEARCH_LYRICS = HymnContract.Entry.COL_HYMN_CONTENT + " LIKE ?";
+    private static final String SEARCH_IDS = HymnContract.Entry.COL_HYMN_ID + " LIKE ?";
 
     /**
      * previously selected view
@@ -90,7 +90,7 @@ public class HymnListActivity extends AppCompatActivity implements LoaderManager
         };
 
         // initialize data
-        HymnsHelper.processText(this);
+        HymnsHelper.processText(this, false);
         getSupportLoaderManager().initLoader(HYMN_LOADER_ID, null, this);
 
         // initialize views
@@ -127,8 +127,8 @@ public class HymnListActivity extends AppCompatActivity implements LoaderManager
                 Snackbar.make(view, hymnId, Snackbar.LENGTH_SHORT).show();
             }
         });
-        if (!mTwoPane)
-            fab.hide();
+//        if (!mTwoPane)
+        fab.hide();
 
 
     }
@@ -166,15 +166,26 @@ public class HymnListActivity extends AppCompatActivity implements LoaderManager
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Uri uri = HymnContract.Entry.CONTENT_URI;
 
+        // this variable  will be re-used heavily in this function, hope you can keep up ;)
+        // I did this so it can always fallback to null ... because when selection is null we
+        // will at least get a query result (the whole db !)
         String selection = null;
         String[] selectionArgs = null;
         String sortOrder = (prefs[1]) ? SORT_NUMERIC : SORT_ALPHABETIC;
 
         if (args != null && args.containsKey(SEARCH_QUERY)) {
             selection = args.getString(SEARCH_QUERY, null);
+
             if (selection != null) {
-                selectionArgs = new String[]{"%" + selection + "%"};
-                selection = (prefs[0] ? SEARCH_LYRICS : SEARCH_TITLES);
+                // if search query contains integer, search ids for that value
+                // else search the titles/content for the full query text
+                if (selection.matches(".*\\d.*")) {
+                    selectionArgs = new String[]{"%" + selection.replaceAll("\\D", "") + "%"};
+                    selection = SEARCH_IDS;
+                } else {
+                    selectionArgs = new String[]{"%" + selection + "%"};
+                    selection = (prefs[0] ? SEARCH_LYRICS : SEARCH_TITLES);
+                }
             }
         }
         return new CursorLoader(this, uri, null, selection, selectionArgs, sortOrder);

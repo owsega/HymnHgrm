@@ -2,9 +2,11 @@ package com.owsega.odevotional.views;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -35,6 +37,7 @@ public class HymnDetailActivity extends AppCompatActivity {
                 Snackbar.make(view, R.string.no_audio, Snackbar.LENGTH_SHORT).show();
             }
         });
+        fab.hide();
 
         // Show the Up button in the action bar.
         ActionBar actionBar = getSupportActionBar();
@@ -63,6 +66,17 @@ public class HymnDetailActivity extends AppCompatActivity {
                     .add(R.id.hymn_detail_container, fragment)
                     .commit();
         }
+
+        //set the top background
+        int random = (int) (Math.random() * 3);
+        int[] backgrounds = new int[]{
+                R.drawable.bg_1,
+                R.drawable.bg_2,
+                R.drawable.bg_3
+        };
+        CollapsingToolbarLayout layout = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
+        if (layout != null)
+            layout.setBackgroundDrawable(ResourcesCompat.getDrawable(getResources(), backgrounds[random], null));
     }
 
     @Override
