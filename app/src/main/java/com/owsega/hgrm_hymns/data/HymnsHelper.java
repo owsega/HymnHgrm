@@ -1,4 +1,4 @@
-package com.owsega.odevotional.data;
+package com.owsega.hgrm_hymns.data;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -16,7 +16,7 @@ import java.util.Scanner;
 /**
  * Helper for hymns
  * This is essentially a view-model where model/data is in db {@link HymnContract} and {@link HymnProvider}
- * and the views are in the package {@link com.owsega.odevotional.views}
+ * and the views are in the package {@link com.owsega.hgrm_hymns.views}
  */
 public class HymnsHelper {
 

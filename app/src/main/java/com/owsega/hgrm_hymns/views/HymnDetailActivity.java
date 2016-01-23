@@ -1,4 +1,4 @@
-package com.owsega.odevotional.views;
+package com.owsega.hgrm_hymns.views;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,7 +11,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.owsega.odevotional.R;
+import com.owsega.hgrm_hymns.R;
 
 /**
  * An activity representing a single Hymn detail screen. This

@@ -1,4 +1,4 @@
-package com.owsega.odevotional.views;
+package com.owsega.hgrm_hymns.views;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -28,9 +28,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.owsega.odevotional.R;
-import com.owsega.odevotional.data.HymnContract;
-import com.owsega.odevotional.data.HymnsHelper;
+import com.owsega.hgrm_hymns.R;
+import com.owsega.hgrm_hymns.data.HymnContract;
+import com.owsega.hgrm_hymns.data.HymnsHelper;
 
 import java.lang.ref.WeakReference;
 
@@ -42,7 +42,8 @@ import java.lang.ref.WeakReference;
  * hymn lyrics. On tablets, the activity presents the list of hymns and
  * hymn details side-by-side using two vertical panes.
  */
-public class HymnListActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class HymnListActivity extends AppCompatActivity
+        implements LoaderManager.LoaderCallbacks<Cursor>, View.OnClickListener {
 
     private static final int HYMN_LOADER_ID = 1;
     private static final String SEARCH_QUERY = "search_query";
@@ -244,6 +245,35 @@ public class HymnListActivity extends AppCompatActivity implements LoaderManager
                 }).show();
     }
 
+    @Override
+    public void onClick(View v) {
+        int _id = (int) v.getTag();
+
+        if (mTwoPane) {
+            Bundle arguments = new Bundle();
+            arguments.putInt(HymnDetailFragment.ARG_ITEM_ID, _id);
+            HymnDetailFragment fragment = new HymnDetailFragment();
+            fragment.setArguments(arguments);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.hymn_detail_container, fragment)
+                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                    .commit();
+
+            // de-highlight and do highlight
+            if (previousSelected != null && previousSelected.get() != null)
+                previousSelected.get().animate().alpha(1).setDuration(500).start();
+            v.animate().alpha(0.5f).setDuration(500).start();
+
+            previousSelected = new WeakReference<>(v);
+        } else {
+            Context context = v.getContext();
+            Intent intent = new Intent(context, HymnDetailActivity.class);
+            intent.putExtra(HymnDetailFragment.ARG_ITEM_ID, _id);
+
+            context.startActivity(intent);
+        }
+    }
+
     /**
      * Adapter for items in the fragment's list
      */
@@ -278,33 +308,7 @@ public class HymnListActivity extends AppCompatActivity implements LoaderManager
                     id.setText(String.valueOf(_id));
                     title.setText(_title);
                     view.setTag(_id);
-                    view.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            if (mTwoPane) {
-                                Bundle arguments = new Bundle();
-                                arguments.putInt(HymnDetailFragment.ARG_ITEM_ID, _id);
-                                HymnDetailFragment fragment = new HymnDetailFragment();
-                                fragment.setArguments(arguments);
-                                getSupportFragmentManager().beginTransaction()
-                                        .replace(R.id.hymn_detail_container, fragment)
-                                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                                        .commit();
-
-                                // do highlight and de-highlight
-                                v.animate().alpha(0.5f).setDuration(500).start();
-                                if (previousSelected != null && previousSelected.get() != null)
-                                    previousSelected.get().animate().alpha(1).setDuration(500).start();
-                                previousSelected = new WeakReference<>(v);
-                            } else {
-                                Context context = v.getContext();
-                                Intent intent = new Intent(context, HymnDetailActivity.class);
-                                intent.putExtra(HymnDetailFragment.ARG_ITEM_ID, _id);
-
-                                context.startActivity(intent);
-                            }
-                        }
-                    });
+                    view.setOnClickListener(HymnListActivity.this);
                 }
             };
         }

@@ -1,6 +1,5 @@
-package com.owsega.odevotional.views;
+package com.owsega.hgrm_hymns.views;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
@@ -12,9 +11,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.owsega.odevotional.R;
-import com.owsega.odevotional.data.HymnsHelper;
-import com.owsega.odevotional.data.HymnsHelper.Hymn;
+import com.owsega.hgrm_hymns.R;
+import com.owsega.hgrm_hymns.data.HymnsHelper;
+import com.owsega.hgrm_hymns.data.HymnsHelper.Hymn;
 
 /**
  * A fragment representing a single Hymn detail screen.
@@ -50,11 +49,7 @@ public class HymnDetailFragment extends Fragment {
             content = mItem.details;
             title = mItem.id + "    " + mItem.title;
 
-            Activity activity = this.getActivity();
-            CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
-            if (appBarLayout != null) {
-                appBarLayout.setTitle(title);
-            }
+            getActivity().setTitle(title);
         }
     }
 

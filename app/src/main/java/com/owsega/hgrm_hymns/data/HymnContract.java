@@ -1,4 +1,4 @@
-package com.owsega.odevotional.data;
+package com.owsega.hgrm_hymns.data;
 
 import android.content.ContentUris;
 import android.net.Uri;
@@ -6,7 +6,7 @@ import android.provider.BaseColumns;
 
 public class HymnContract {
 
-    public static final String CONTENT_AUTHORITY = "com.owsega.odevotional.hymn";
+    public static final String CONTENT_AUTHORITY = "com.owsega.hgrm_hymns.hymn";
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
     public static final String PATH = "hymns";

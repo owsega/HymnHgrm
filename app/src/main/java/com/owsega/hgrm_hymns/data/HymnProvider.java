@@ -1,4 +1,4 @@
-package com.owsega.odevotional.data;
+package com.owsega.hgrm_hymns.data;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -17,7 +17,7 @@ import android.util.Log;
  * ContentProvider for managing hymns.
  */
 public class HymnProvider extends ContentProvider {
-    private static final String LOG_TAG = "O'Devotional.Hymns";
+    private static final String LOG_TAG = "Hgrm.Hymns";
     private static final int HYMN_ITEM = 100;
     private static final UriMatcher sUriMatcher = buildUriMatcher();
     private HymnDbHelper hymnDbHelper;

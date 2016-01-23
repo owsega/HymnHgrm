@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.owsega.odevotional">
+    package="com.owsega.hgrm_hymns">
 
     <application
-        android:name=".MyApplication"
+        android:name="com.owsega.hgrm_hymns.MyApplication"
         android:allowBackup="true"
         android:description="@string/description"
         android:icon="@mipmap/my_con"
@@ -11,7 +11,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".views.HymnListActivity"
+            android:name="com.owsega.hgrm_hymns.views.HymnListActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
 
@@ -22,20 +22,20 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".views.HymnDetailActivity"
+            android:name="com.owsega.hgrm_hymns.views.HymnDetailActivity"
             android:label="@string/title_hymn_detail"
-            android:parentActivityName=".views.HymnListActivity"
+            android:parentActivityName="com.owsega.hgrm_hymns.views.HymnListActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".views.HymnListActivity" />
+                android:value="com.owsega.hgrm_hymns.views.HymnListActivity" />
         </activity>
 
         <provider
-            android:name=".data.HymnProvider"
-            android:authorities="com.owsega.odevotional.hymn"
+            android:name="com.owsega.hgrm_hymns.data.HymnProvider"
+            android:authorities="com.owsega.hgrm_hymns.hymn"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="false" />
     </application>
 
 </manifest>

@@ -1,4 +1,4 @@
-package com.owsega.odevotional;
+package com.owsega.hgrm_hymns;
 
 import android.app.Application;
 
