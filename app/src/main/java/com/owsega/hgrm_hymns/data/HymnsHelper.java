@@ -25,24 +25,28 @@ import java.util.Scanner;
  * and the views are in the package {@link com.owsega.hgrm_hymns.views}
  */
 public class HymnsHelper {
+    private static final String ENGLISH_FILE_NAME = "English.txt";
+    private static final String YORUBA_FILE_NAME = "Yoruba.txt";
 
-    static Uri uri = HymnContract.Entry.CONTENT_URI;
+    private static final Uri ENGLISH_URI = HymnContract.EnglishEntry.CONTENT_URI;
+    private static final Uri YORUBA_URI = HymnContract.YorubaEntry.CONTENT_URI;
 
     static StringBuilder nextHymn = new StringBuilder();
 
+    //todo "seyi" add yoruba support
     public static Hymn get(ContentResolver cr, int id) {
-        Uri uri = HymnContract.Entry.CONTENT_URI;
-        String selection = HymnContract.Entry.COL_HYMN_ID + " = ? ";
+        Uri uri = HymnContract.EnglishEntry.CONTENT_URI;
+        String selection = HymnContract.EnglishEntry.COL_HYMN_ID + " = ? ";
         Hymn retVal = null;
 
         Cursor c = cr.query(uri, null, selection, new String[]{String.valueOf(id)}, null);
         if (c != null && c.moveToFirst()) {
             retVal = new Hymn(
-                    c.getInt(c.getColumnIndex(HymnContract.Entry.COL_HYMN_ID)),
-                    c.getString(c.getColumnIndex(HymnContract.Entry.COL_HYMN_TITLE)),
-                    c.getString(c.getColumnIndex(HymnContract.Entry.COL_HYMN_CONTENT)),
-                    c.getInt(c.getColumnIndex(HymnContract.Entry.COL_STANZA_COUNT)),
-                    c.getInt(c.getColumnIndex(HymnContract.Entry.COL_HAS_CHORUS)) == 1
+                    c.getInt(c.getColumnIndex(HymnContract.EnglishEntry.COL_HYMN_ID)),
+                    c.getString(c.getColumnIndex(HymnContract.EnglishEntry.COL_HYMN_TITLE)),
+                    c.getString(c.getColumnIndex(HymnContract.EnglishEntry.COL_HYMN_CONTENT)),
+                    c.getInt(c.getColumnIndex(HymnContract.EnglishEntry.COL_STANZA_COUNT)),
+                    c.getInt(c.getColumnIndex(HymnContract.EnglishEntry.COL_HAS_CHORUS)) == 1
             );
             c.close();
         }
@@ -87,6 +91,12 @@ public class HymnsHelper {
                     .putBoolean(HymnListActivity.PREF_SORT_BY_ID, true)
                     .apply();
 
+            processHymnAsset(ENGLISH_FILE_NAME, ENGLISH_URI);
+            processHymnAsset(YORUBA_FILE_NAME, YORUBA_URI);
+            return null;
+        }
+
+        private void processHymnAsset(String name, Uri uri) {
             String file;
             String endOfLinePattern = "####";
             String newSongFormat = "%03d";
@@ -94,7 +104,7 @@ public class HymnsHelper {
             String[] songs = new String[307];
             String[] titles = new String[307];
             try {
-                file = getStringFromStream(mContext.getAssets().open("Hymns.txt"));
+                file = getStringFromStream(mContext.getAssets().open(name));
 
                 String[] lines = file.split(endOfLinePattern);
 
@@ -121,14 +131,12 @@ public class HymnsHelper {
                 songs[songsSoFar] = nextHymn.toString();
 
                 Log.d(LOG_TAG, "all songs: " + songs.length);
-                putHymnsInDb(songs, titles);
+                putHymnsInDb(songs, titles, uri);
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            return null;
         }
-
         /**
          * This snippet reads all of the InputStream into a String.
          *
@@ -151,7 +159,13 @@ public class HymnsHelper {
         }
 
         private boolean dbHasStuffsAlready() {
-            Cursor cursor = mContext.getContentResolver().query(uri, null, null, null, null);
+            Cursor cursor = mContext.getContentResolver().query(ENGLISH_URI, null, null, null, null);
+            if (cursor != null) {
+                if (cursor.getCount() > 0)
+                    return true;
+                cursor.close();
+            }
+            cursor = mContext.getContentResolver().query(YORUBA_URI, null, null, null, null);
             if (cursor != null) {
                 if (cursor.getCount() > 0)
                     return true;
@@ -160,18 +174,18 @@ public class HymnsHelper {
             return false;
         }
 
-        private void putHymnsInDb(String[] songs, String[] titles) {
+        private void putHymnsInDb(String[] songs, String[] titles, Uri uri) {
             ContentValues values;
 
             mContext.getContentResolver().delete(uri, null, null);
 
             for (int i = 1; i < songs.length; i++) {
                 values = new ContentValues();
-                values.put(HymnContract.Entry.COL_HYMN_ID, i);
-                values.put(HymnContract.Entry.COL_HYMN_TITLE, titles[i]);
-                values.put(HymnContract.Entry.COL_HAS_CHORUS, true);
-                values.put(HymnContract.Entry.COL_HYMN_CONTENT, songs[i]);
-                values.put(HymnContract.Entry.COL_STANZA_COUNT, 3);
+                values.put(HymnContract.EnglishEntry.COL_HYMN_ID, i);
+                values.put(HymnContract.EnglishEntry.COL_HYMN_TITLE, titles[i]);
+                values.put(HymnContract.EnglishEntry.COL_HAS_CHORUS, true);
+                values.put(HymnContract.EnglishEntry.COL_HYMN_CONTENT, songs[i]);
+                values.put(HymnContract.EnglishEntry.COL_STANZA_COUNT, 3);
                 if (mContext.getContentResolver().insert(uri, values) != null)
                     Log.d(LOG_TAG, "inserted hymn " + i);
             }

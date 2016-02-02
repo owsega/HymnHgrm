@@ -18,7 +18,8 @@ import android.util.Log;
  */
 public class HymnProvider extends ContentProvider {
     private static final String LOG_TAG = "Hgrm.Hymns";
-    private static final int HYMN_ITEM = 100;
+    private static final int ENGLISH_ITEM = 100;
+    private static final int YORUBA_ITEM = 200;
     private static final UriMatcher sUriMatcher = buildUriMatcher();
     private HymnDbHelper hymnDbHelper;
 
@@ -27,7 +28,8 @@ public class HymnProvider extends ContentProvider {
 
     private static UriMatcher buildUriMatcher() {
         final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
-        matcher.addURI(HymnContract.CONTENT_AUTHORITY, HymnContract.PATH, HYMN_ITEM);
+        matcher.addURI(HymnContract.CONTENT_AUTHORITY, HymnContract.PATH_ENGLISH, ENGLISH_ITEM);
+        matcher.addURI(HymnContract.CONTENT_AUTHORITY, HymnContract.PATH_YORUBA, YORUBA_ITEM);
 
         return matcher;
     }
@@ -45,8 +47,11 @@ public class HymnProvider extends ContentProvider {
         try {
             SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
             switch (sUriMatcher.match(uri)) {
-                case HYMN_ITEM:
-                    qb.setTables(HymnContract.Entry.TABLE_NAME);
+                case ENGLISH_ITEM:
+                    qb.setTables(HymnContract.EnglishEntry.TABLE_NAME);
+                    break;
+                case YORUBA_ITEM:
+                    qb.setTables(HymnContract.YorubaEntry.TABLE_NAME);
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid URI: " + uri);
@@ -67,8 +72,10 @@ public class HymnProvider extends ContentProvider {
         final int match = sUriMatcher.match(uri);
 
         switch (match) {
-            case HYMN_ITEM:
-                return HymnContract.Entry.CONTENT_TYPE;
+            case ENGLISH_ITEM:
+                return HymnContract.EnglishEntry.CONTENT_TYPE;
+            case YORUBA_ITEM:
+                return HymnContract.YorubaEntry.CONTENT_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -77,13 +84,21 @@ public class HymnProvider extends ContentProvider {
     @Override
     public Uri insert(@NonNull Uri uri, ContentValues values) throws SQLException {
         Uri returnUri;
+        final SQLiteDatabase db = hymnDbHelper.getWritableDatabase();
+        long _id;
 
         switch (sUriMatcher.match(uri)) {
-            case HYMN_ITEM:
-                final SQLiteDatabase db = hymnDbHelper.getWritableDatabase();
-                long _id = db.insert(HymnContract.Entry.TABLE_NAME, null, values);
+            case ENGLISH_ITEM:
+                _id = db.insert(HymnContract.EnglishEntry.TABLE_NAME, null, values);
                 if (_id > 0)
-                    returnUri = HymnContract.Entry.buildUri(_id);
+                    returnUri = HymnContract.EnglishEntry.buildUri(_id);
+                else
+                    throw new SQLException("Failed to insert row into " + uri);
+                break;
+            case YORUBA_ITEM:
+                _id = db.insert(HymnContract.YorubaEntry.TABLE_NAME, null, values);
+                if (_id > 0)
+                    returnUri = HymnContract.YorubaEntry.buildUri(_id);
                 else
                     throw new SQLException("Failed to insert row into " + uri);
                 break;
@@ -102,9 +117,11 @@ public class HymnProvider extends ContentProvider {
         final int match = sUriMatcher.match(uri);
         int rowsDeleted;
         switch (match) {
-            case HYMN_ITEM:
-                rowsDeleted = db.delete(
-                        HymnContract.Entry.TABLE_NAME, selection, selectionArgs);
+            case ENGLISH_ITEM:
+                rowsDeleted = db.delete(HymnContract.EnglishEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+            case YORUBA_ITEM:
+                rowsDeleted = db.delete(HymnContract.YorubaEntry.TABLE_NAME, selection, selectionArgs);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid URI: " + uri);
@@ -123,8 +140,12 @@ public class HymnProvider extends ContentProvider {
         int rowsUpdated;
 
         switch (match) {
-            case HYMN_ITEM:
-                rowsUpdated = db.update(HymnContract.Entry.TABLE_NAME, values, selection,
+            case ENGLISH_ITEM:
+                rowsUpdated = db.update(HymnContract.EnglishEntry.TABLE_NAME, values, selection,
+                        selectionArgs);
+                break;
+            case YORUBA_ITEM:
+                rowsUpdated = db.update(HymnContract.YorubaEntry.TABLE_NAME, values, selection,
                         selectionArgs);
                 break;
             default:
@@ -142,11 +163,26 @@ public class HymnProvider extends ContentProvider {
         final int match = sUriMatcher.match(uri);
         int returnCount = 0;
         switch (match) {
-            case HYMN_ITEM:
+            case ENGLISH_ITEM:
                 db.beginTransaction();
                 try {
                     for (ContentValues value : values) {
-                        long _id = db.insert(HymnContract.Entry.TABLE_NAME, null, value);
+                        long _id = db.insert(HymnContract.EnglishEntry.TABLE_NAME, null, value);
+                        if (_id != -1) {
+                            returnCount++;
+                        }
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+                if (getContext() != null) getContext().getContentResolver().notifyChange(uri, null);
+                return returnCount;
+            case YORUBA_ITEM:
+                db.beginTransaction();
+                try {
+                    for (ContentValues value : values) {
+                        long _id = db.insert(HymnContract.YorubaEntry.TABLE_NAME, null, value);
                         if (_id != -1) {
                             returnCount++;
                         }
@@ -176,21 +212,32 @@ public class HymnProvider extends ContentProvider {
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-            final String SQL_CREATE_NOTIFICATION_TABLE = "CREATE TABLE " +
-                    HymnContract.Entry.TABLE_NAME + " (" +
-                    HymnContract.Entry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    HymnContract.Entry.COL_HYMN_ID + " INTEGER UNIQUE, " +
-                    HymnContract.Entry.COL_HYMN_CONTENT + " TEXT NOT NULL COLLATE NOCASE, " +
-                    HymnContract.Entry.COL_HYMN_TITLE + " TEXT NOT NULL COLLATE NOCASE, " +
-                    HymnContract.Entry.COL_STANZA_COUNT + " INTEGER, " +
-                    HymnContract.Entry.COL_HAS_CHORUS + " BOOLEAN"
+            final String SQL_CREATE_ENGLISH_TABLE = "CREATE TABLE " +
+                    HymnContract.EnglishEntry.TABLE_NAME + " (" +
+                    HymnContract.EnglishEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    HymnContract.EnglishEntry.COL_HYMN_ID + " INTEGER UNIQUE, " +
+                    HymnContract.EnglishEntry.COL_HYMN_CONTENT + " TEXT NOT NULL COLLATE NOCASE, " +
+                    HymnContract.EnglishEntry.COL_HYMN_TITLE + " TEXT NOT NULL COLLATE NOCASE, " +
+                    HymnContract.EnglishEntry.COL_STANZA_COUNT + " INTEGER, " +
+                    HymnContract.EnglishEntry.COL_HAS_CHORUS + " BOOLEAN"
                     + " );";
-            db.execSQL(SQL_CREATE_NOTIFICATION_TABLE);
+            final String SQL_CREATE_YORUBA_TABLE = "CREATE TABLE " +
+                    HymnContract.YorubaEntry.TABLE_NAME + " (" +
+                    HymnContract.YorubaEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    HymnContract.YorubaEntry.COL_HYMN_ID + " INTEGER UNIQUE, " +
+                    HymnContract.YorubaEntry.COL_HYMN_CONTENT + " TEXT NOT NULL COLLATE NOCASE, " +
+                    HymnContract.YorubaEntry.COL_HYMN_TITLE + " TEXT NOT NULL COLLATE NOCASE, " +
+                    HymnContract.YorubaEntry.COL_STANZA_COUNT + " INTEGER, " +
+                    HymnContract.YorubaEntry.COL_HAS_CHORUS + " BOOLEAN"
+                    + " );";
+            db.execSQL(SQL_CREATE_ENGLISH_TABLE);
+            db.execSQL(SQL_CREATE_YORUBA_TABLE);
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            db.execSQL("DROP TABLE IF EXISTS " + HymnContract.Entry.TABLE_NAME);
+            db.execSQL("DROP TABLE IF EXISTS " + HymnContract.EnglishEntry.TABLE_NAME);
+            db.execSQL("DROP TABLE IF EXISTS " + HymnContract.YorubaEntry.TABLE_NAME);
             onCreate(db);
         }
     }

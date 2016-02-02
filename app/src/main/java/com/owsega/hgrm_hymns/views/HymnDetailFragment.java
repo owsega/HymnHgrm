@@ -42,7 +42,7 @@ public class HymnDetailFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        
         if (getArguments().containsKey(ARG_ITEM_ID)) {
             Hymn mItem = HymnsHelper.get(getActivity().getContentResolver(), getArguments().getInt(ARG_ITEM_ID));
 

@@ -49,11 +49,11 @@ public class HymnListActivity extends AppCompatActivity
     public static final String PREF_SORT_BY_ID = "sort_by_hymn_id";
     private static final int HYMN_LOADER_ID = 1;
     private static final String SEARCH_QUERY = "search_query";
-    private static final String SORT_ALPHABETIC = HymnContract.Entry.COL_HYMN_TITLE + " ASC";
-    private static final String SORT_NUMERIC = HymnContract.Entry.COL_HYMN_ID + " ASC";
-    private static final String SEARCH_TITLES = HymnContract.Entry.COL_HYMN_TITLE + " LIKE ?";
-    private static final String SEARCH_LYRICS = HymnContract.Entry.COL_HYMN_CONTENT + " LIKE ?";
-    private static final String SEARCH_IDS = HymnContract.Entry.COL_HYMN_ID + " LIKE ?";
+    private static final String SORT_ALPHABETIC = HymnContract.EnglishEntry.COL_HYMN_TITLE + " ASC";
+    private static final String SORT_NUMERIC = HymnContract.EnglishEntry.COL_HYMN_ID + " ASC";
+    private static final String SEARCH_TITLES = HymnContract.EnglishEntry.COL_HYMN_TITLE + " LIKE ?";
+    private static final String SEARCH_LYRICS = HymnContract.EnglishEntry.COL_HYMN_CONTENT + " LIKE ?";
+    private static final String SEARCH_IDS = HymnContract.EnglishEntry.COL_HYMN_ID + " LIKE ?";
 
     /**
      * previously selected view
@@ -92,7 +92,7 @@ public class HymnListActivity extends AppCompatActivity
         };
 
         // initialize data
-        new HymnsHelper.LoadDataTask(this, false).execute();
+        new HymnsHelper.LoadDataTask(this, true).execute();
         getSupportLoaderManager().initLoader(HYMN_LOADER_ID, null, this);
 
         // initialize views
@@ -166,7 +166,7 @@ public class HymnListActivity extends AppCompatActivity
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Uri uri = HymnContract.Entry.CONTENT_URI;
+        Uri uri = HymnContract.EnglishEntry.CONTENT_URI;
 
         // this variable  will be re-used heavily in this function, hope you can keep up ;)
         // I did this so it can always fallback to null ... because when selection is null we
@@ -301,8 +301,8 @@ public class HymnListActivity extends AppCompatActivity
 
                 @Override
                 public void bindView(View view, Context context, Cursor cursor) {
-                    final int _id = cursor.getInt(cursor.getColumnIndex(HymnContract.Entry.COL_HYMN_ID));
-                    String _title = cursor.getString(cursor.getColumnIndex(HymnContract.Entry.COL_HYMN_TITLE));
+                    final int _id = cursor.getInt(cursor.getColumnIndex(HymnContract.EnglishEntry.COL_HYMN_ID));
+                    String _title = cursor.getString(cursor.getColumnIndex(HymnContract.EnglishEntry.COL_HYMN_TITLE));
 
                     TextView id = (TextView) view.findViewById(R.id.id);
                     TextView title = (TextView) view.findViewById(R.id.hymn_title);
