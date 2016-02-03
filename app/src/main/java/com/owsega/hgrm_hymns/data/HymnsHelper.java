@@ -25,17 +25,17 @@ import java.util.Scanner;
  * and the views are in the package {@link com.owsega.hgrm_hymns.views}
  */
 public class HymnsHelper {
+    public static final Uri ENGLISH_URI = HymnContract.EnglishEntry.CONTENT_URI;
+    public static final Uri YORUBA_URI = HymnContract.YorubaEntry.CONTENT_URI;
     private static final String ENGLISH_FILE_NAME = "English.txt";
     private static final String YORUBA_FILE_NAME = "Yoruba.txt";
-
-    private static final Uri ENGLISH_URI = HymnContract.EnglishEntry.CONTENT_URI;
-    private static final Uri YORUBA_URI = HymnContract.YorubaEntry.CONTENT_URI;
-
     static StringBuilder nextHymn = new StringBuilder();
 
-    //todo "seyi" add yoruba support
-    public static Hymn get(ContentResolver cr, int id) {
+    public static Hymn get(ContentResolver cr, int id, Uri _uri) {
         Uri uri = HymnContract.EnglishEntry.CONTENT_URI;
+        if (_uri != null)
+            uri = _uri;
+
         String selection = HymnContract.EnglishEntry.COL_HYMN_ID + " = ? ";
         Hymn retVal = null;
 
@@ -137,6 +137,7 @@ public class HymnsHelper {
                 e.printStackTrace();
             }
         }
+
         /**
          * This snippet reads all of the InputStream into a String.
          *

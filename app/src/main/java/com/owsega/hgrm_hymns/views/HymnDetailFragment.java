@@ -1,5 +1,6 @@
 package com.owsega.hgrm_hymns.views;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
@@ -27,6 +28,7 @@ public class HymnDetailFragment extends Fragment {
      * represents.
      */
     public static final String ARG_ITEM_ID = "hymn_id";
+    public static final String ARG_ITEM_URI = "hymn_uri";
     private final String LOG_TAG = getClass().getSimpleName();
 
     private String content = "";
@@ -42,9 +44,14 @@ public class HymnDetailFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         if (getArguments().containsKey(ARG_ITEM_ID)) {
-            Hymn mItem = HymnsHelper.get(getActivity().getContentResolver(), getArguments().getInt(ARG_ITEM_ID));
+            Uri uri = null;
+            if (getArguments().containsKey(ARG_ITEM_URI))
+                uri = getArguments().getParcelable(ARG_ITEM_URI);
+
+            Hymn mItem = HymnsHelper.get(getActivity().getContentResolver(),
+                    getArguments().getInt(ARG_ITEM_ID), uri);
 
             content = mItem.details;
             title = mItem.id + "    " + mItem.title;

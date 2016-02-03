@@ -34,6 +34,10 @@ import com.owsega.hgrm_hymns.data.HymnsHelper;
 
 import java.lang.ref.WeakReference;
 
+import static com.owsega.hgrm_hymns.views.HymnDetailActivity.LANGUAGE_SETTING;
+import static com.owsega.hgrm_hymns.views.HymnDetailActivity.LANG_ENGLISH;
+import static com.owsega.hgrm_hymns.views.HymnDetailActivity.LANG_YORUBA;
+
 /**
  * An activity representing a list of Hymns. This activity
  * has different presentations for handset and tablet-size devices. On
@@ -92,7 +96,7 @@ public class HymnListActivity extends AppCompatActivity
         };
 
         // initialize data
-        new HymnsHelper.LoadDataTask(this, true).execute();
+        new HymnsHelper.LoadDataTask(this, false).execute();
         getSupportLoaderManager().initLoader(HYMN_LOADER_ID, null, this);
 
         // initialize views
@@ -166,11 +170,15 @@ public class HymnListActivity extends AppCompatActivity
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Uri uri = HymnContract.EnglishEntry.CONTENT_URI;
+        int languageSetting = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                .getInt(LANGUAGE_SETTING, LANG_ENGLISH);
 
-        // this variable  will be re-used heavily in this function, hope you can keep up ;)
-        // I did this so it can always fallback to null ... because when selection is null we
-        // will at least get a query result (the whole db !)
+        Uri uri = languageSetting == LANG_YORUBA ? HymnContract.YorubaEntry.CONTENT_URI
+                : HymnContract.EnglishEntry.CONTENT_URI;
+
+        // this variable will be re-used heavily in this function, hope you can keep up ;)
+        // I did this so it can always fall back to null ... because when selection is null we
+        // will at least get a query result (the whole db!)
         String selection = null;
         String[] selectionArgs = null;
         String sortOrder = (prefs[1]) ? SORT_NUMERIC : SORT_ALPHABETIC;
@@ -208,6 +216,15 @@ public class HymnListActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.hymn_list, menu);
+
+        // add language swapper
+        int languageSetting = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                .getInt(LANGUAGE_SETTING, LANG_ENGLISH);
+        String menuTitle = (languageSetting == LANG_ENGLISH) ? getString(R.string.action_english)
+                : getString(R.string.action_yoruba);
+        menu.add(1, HymnDetailActivity.action_change_language, 20, menuTitle)
+                .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+
         return true;
     }
 
@@ -217,8 +234,50 @@ public class HymnListActivity extends AppCompatActivity
             case R.id.action_settings:
                 showSettingsDialog();
                 return true;
+            case HymnDetailActivity.action_change_language:
+                SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                int oldSetting = pref.getInt(LANGUAGE_SETTING, LANG_ENGLISH);
+
+                // toggle the setting
+                if (oldSetting == LANG_ENGLISH) {
+                    pref.edit().putInt(LANGUAGE_SETTING, LANG_YORUBA).apply();
+                    item.setTitle(R.string.action_yoruba);
+                    reloadListAndLyrics(LANG_YORUBA);
+                } else if (oldSetting == LANG_YORUBA) {
+                    pref.edit().putInt(LANGUAGE_SETTING, LANG_ENGLISH).apply();
+                    item.setTitle(R.string.action_english);
+                    reloadListAndLyrics(LANG_ENGLISH);
+                }
+
+                return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void reloadListAndLyrics(int lang) {
+        //reload list
+        getSupportLoaderManager().restartLoader(HYMN_LOADER_ID, args, HymnListActivity.this);
+
+        // reload lyrics
+        if (mTwoPane) {
+            int _id = -1;
+            if (previousSelected != null && previousSelected.get() != null)
+                _id = (int) previousSelected.get().getTag();
+
+            if (_id >= 0) {
+                Uri uri = lang == LANG_YORUBA ? HymnContract.YorubaEntry.CONTENT_URI
+                        : HymnContract.EnglishEntry.CONTENT_URI;
+                Bundle arguments = new Bundle();
+                arguments.putParcelable(HymnDetailFragment.ARG_ITEM_URI, uri);
+                arguments.putInt(HymnDetailFragment.ARG_ITEM_ID, _id);
+                HymnDetailFragment fragment = new HymnDetailFragment();
+                fragment.setArguments(arguments);
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.hymn_detail_container, fragment)
+                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                        .commit();
+            }
+        }
     }
 
     private void showSettingsDialog() {

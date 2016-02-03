@@ -1,17 +1,22 @@
 package com.owsega.hgrm_hymns.views;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.owsega.hgrm_hymns.R;
+import com.owsega.hgrm_hymns.data.HymnContract;
 
 /**
  * An activity representing a single Hymn detail screen. This
@@ -20,6 +25,11 @@ import com.owsega.hgrm_hymns.R;
  * in a {@link HymnListActivity}.
  */
 public class HymnDetailActivity extends AppCompatActivity {
+
+    public static final String LANGUAGE_SETTING = "pref_language";
+    public static final int LANG_ENGLISH = 1;
+    public static final int LANG_YORUBA = 2;
+    public static final int action_change_language = 123;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,15 +53,6 @@ public class HymnDetailActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        // savedInstanceState is non-null when there is fragment state
-        // saved from previous configurations of this activity
-        // (e.g. when rotating the screen from portrait to landscape).
-        // In this case, the fragment will automatically be re-added
-        // to its container so we don't need to manually add it.
-        // For more information, see the Fragments API guide at:
-        //
-        // http://developer.android.com/guide/components/fragments.html
-        //
         if (savedInstanceState == null) {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
@@ -67,19 +68,56 @@ public class HymnDetailActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        int languageSetting = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                .getInt(LANGUAGE_SETTING, LANG_ENGLISH);
+
+        String menuTitle = (languageSetting == LANG_ENGLISH) ? getString(R.string.action_english)
+                : getString(R.string.action_yoruba);
+
+        menu.add(1, action_change_language, 20, menuTitle)
+                .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-            // This ID represents the Home or Up button. In the case of this
-            // activity, the Up button is shown. Use NavUtils to allow users
-            // to navigate up one level in the application structure. For
-            // more details, see the Navigation pattern on Android Design:
-            //
-            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
-            //
             NavUtils.navigateUpTo(this, new Intent(this, HymnListActivity.class));
+            return true;
+        } else if (item.getItemId() == action_change_language) {
+            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            int oldSetting = pref.getInt(LANGUAGE_SETTING, LANG_ENGLISH);
+
+            // toggle the setting
+            if (oldSetting == LANG_ENGLISH) {
+                pref.edit().putInt(LANGUAGE_SETTING, LANG_YORUBA).apply();
+                item.setTitle(R.string.action_yoruba);
+                reloadFragment(LANG_YORUBA);
+            } else if (oldSetting == LANG_YORUBA) {
+                pref.edit().putInt(LANGUAGE_SETTING, LANG_ENGLISH).apply();
+                item.setTitle(R.string.action_english);
+                reloadFragment(LANG_ENGLISH);
+            }
+
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void reloadFragment(int lang) {
+        Uri uri = lang == LANG_YORUBA ? HymnContract.YorubaEntry.CONTENT_URI
+                : HymnContract.EnglishEntry.CONTENT_URI;
+        Bundle arguments = new Bundle();
+        arguments.putParcelable(HymnDetailFragment.ARG_ITEM_URI, uri);
+        arguments.putInt(HymnDetailFragment.ARG_ITEM_ID,
+                getIntent().getIntExtra(HymnDetailFragment.ARG_ITEM_ID, 1));
+        HymnDetailFragment fragment = new HymnDetailFragment();
+        fragment.setArguments(arguments);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.hymn_detail_container, fragment)
+                .commit();
     }
 }

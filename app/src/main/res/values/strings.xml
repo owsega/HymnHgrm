@@ -12,4 +12,7 @@
     <string name="please_wait">Please wait</string>
     <string name="loading_hymns">Loading hymns for the first time</string>
 
+    <string name="action_english">ENG</string>
+    <string name="action_yoruba">YOR</string>
+
 </resources>
