@@ -4,7 +4,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.res.ResourcesCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -86,13 +85,11 @@ public class HymnDetailFragment extends Fragment {
         CollapsingToolbarLayout layout = (CollapsingToolbarLayout) getActivity()
                 .findViewById(R.id.toolbar_layout);
         if (layout != null)
-            layout.setBackgroundDrawable(ResourcesCompat.getDrawable(
-                    getResources(), backgrounds[random], null));
+            layout.setBackgroundResource(backgrounds[random]);
 
         // set the background for lyrics pane
         ImageView background = (ImageView) rootView.findViewById(R.id.img_bg);
-        background.setBackgroundDrawable(ResourcesCompat.getDrawable(
-                getResources(), backgrounds[random], null));
+        background.setBackgroundResource(backgrounds[random]);
     }
 
     private void hideNoHymnTextView() {

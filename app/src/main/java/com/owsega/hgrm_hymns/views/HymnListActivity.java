@@ -313,6 +313,11 @@ public class HymnListActivity extends AppCompatActivity
         if (mTwoPane) {
             Bundle arguments = new Bundle();
             arguments.putInt(HymnDetailFragment.ARG_ITEM_ID, _id);
+            int lang = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                    .getInt(LANGUAGE_SETTING, LANG_ENGLISH);
+            Uri uri = lang == LANG_YORUBA ? HymnContract.YorubaEntry.CONTENT_URI
+                    : HymnContract.EnglishEntry.CONTENT_URI;
+            arguments.putParcelable(HymnDetailFragment.ARG_ITEM_URI, uri);
             HymnDetailFragment fragment = new HymnDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()

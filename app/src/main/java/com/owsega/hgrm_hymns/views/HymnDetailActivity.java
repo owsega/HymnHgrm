@@ -57,6 +57,11 @@ public class HymnDetailActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
+            int lang = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                    .getInt(LANGUAGE_SETTING, LANG_ENGLISH);
+            Uri uri = lang == LANG_YORUBA ? HymnContract.YorubaEntry.CONTENT_URI
+                    : HymnContract.EnglishEntry.CONTENT_URI;
+            arguments.putParcelable(HymnDetailFragment.ARG_ITEM_URI, uri);
             arguments.putInt(HymnDetailFragment.ARG_ITEM_ID,
                     getIntent().getIntExtra(HymnDetailFragment.ARG_ITEM_ID, 1));
             HymnDetailFragment fragment = new HymnDetailFragment();
