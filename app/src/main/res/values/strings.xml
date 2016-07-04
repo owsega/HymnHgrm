@@ -14,5 +14,7 @@
 
     <string name="action_english">ENG</string>
     <string name="action_yoruba">YOR</string>
+    <string name="action_font_size">Change Font Size</string>
+    <string name="error_occurred">An error occurred</string>
 
 </resources>

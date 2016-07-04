@@ -2,6 +2,7 @@ package com.owsega.hgrm_hymns.views;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -14,6 +15,9 @@ import android.widget.TextView;
 import com.owsega.hgrm_hymns.R;
 import com.owsega.hgrm_hymns.data.HymnsHelper;
 import com.owsega.hgrm_hymns.data.HymnsHelper.Hymn;
+
+import static com.owsega.hgrm_hymns.views.HymnDetailActivity.FONT_SETTING;
+import static com.owsega.hgrm_hymns.views.HymnDetailActivity.MINIMUM_FONT;
 
 /**
  * A fragment representing a single Hymn detail screen.
@@ -32,12 +36,14 @@ public class HymnDetailFragment extends Fragment {
 
     private String content = "";
     private String title = "";
+    private TextView hymnText;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
     public HymnDetailFragment() {
+        setRetainInstance(true);
     }
 
     @Override
@@ -62,9 +68,11 @@ public class HymnDetailFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         View view = inflater.inflate(R.layout.hymn_detail, container, false);
-        ((TextView) view.findViewById(R.id.content)).setText(content);
+        hymnText = ((TextView) view.findViewById(R.id.content));
+        hymnText.setText(content);
+        hymnText.setTextSize(MINIMUM_FONT + PreferenceManager.getDefaultSharedPreferences(
+                view.getContext()).getInt(FONT_SETTING, 0));
         ((TextView) view.findViewById(R.id.title)).setText(title);
 
         setBackgroundImages(view);
@@ -100,5 +108,14 @@ public class HymnDetailFragment extends Fragment {
         } catch (Exception e) {
             Log.w(LOG_TAG, "Failed to hide no_hymn_yet text view");
         }
+    }
+
+    /**
+     * set the textSize for the hymn text
+     *
+     * @param fontSize in sp (scaled pixel)
+     */
+    public void setHymnFontSize(int fontSize) {
+        hymnText.setTextSize(fontSize);
     }
 }
