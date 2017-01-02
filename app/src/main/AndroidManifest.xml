@@ -33,7 +33,7 @@
 
         <provider
             android:name="com.owsega.hgrm_hymns.data.HymnProvider"
-            android:authorities="com.owsega.hgrm_hymns.hymn"
+            android:authorities="${applicationId}.hymn"
             android:enabled="true"
             android:exported="false" />
     </application>

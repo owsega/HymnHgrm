@@ -4,9 +4,11 @@ import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
+import com.owsega.hgrm_hymns.BuildConfig;
+
 public class HymnContract {
 
-    public static final String CONTENT_AUTHORITY = "com.owsega.hgrm_hymns.hymn";
+    public static final String CONTENT_AUTHORITY = BuildConfig.APPLICATION_ID + ".hymn";
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
     public static final String PATH_ENGLISH = "english";
