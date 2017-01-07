@@ -1,29 +1,28 @@
 package com.owsega.hgrm_hymns.views;
 
-import android.content.DialogInterface;
+import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.DrawableRes;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.SeekBar;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.owsega.hgrm_hymns.R;
 import com.owsega.hgrm_hymns.data.HymnContract;
+
+import net.opacapp.multilinecollapsingtoolbar.CollapsingToolbarLayout;
 
 /**
  * An activity representing a single Hymn detail screen. This
@@ -40,16 +39,22 @@ public class HymnDetailActivity extends AppCompatActivity {
     public static final int action_change_language = 123;
     public static final int action_change_font_size = 125;
     public static final int MINIMUM_FONT = 12;
+    public static final int DEFAULT_FONT_OFFSET = 4;  // to make default font size 16sp
 
     HymnDetailFragment fragment;
+    CollapsingToolbarLayout collapsingToolbarLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setupWindowAnimations();
         setContentView(R.layout.activity_hymn_detail);
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);  // keep scree on while user reads hymn
         Toolbar toolbar = (Toolbar) findViewById(R.id.detail_toolbar);
         setSupportActionBar(toolbar);
+
+        collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         assert fab != null;
@@ -97,9 +102,6 @@ public class HymnDetailActivity extends AppCompatActivity {
         menu.add(1, action_change_language, 20, menuTitle)
                 .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
 
-        menu.add(1, action_change_font_size, 20, R.string.action_font_size)
-                .setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
-
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -124,57 +126,21 @@ public class HymnDetailActivity extends AppCompatActivity {
                     reloadFragment(LANG_ENGLISH);
                 }
                 return true;
-            case action_change_font_size:
-                int fontSetting = PreferenceManager.getDefaultSharedPreferences(this)
-                        .getInt(FONT_SETTING, 0);
-                showChangeFontDialog(fontSetting);
-                break;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * show an alert dialog for changing the
-     */
-    private void showChangeFontDialog(int fontSetting) {
-        View v = LayoutInflater.from(this).inflate(R.layout.hymn_detail_settings, null);
-        final TextView currentFont = (TextView) v.findViewById(R.id.current_font_size);
-        currentFont.setText(String.valueOf(fontSetting + MINIMUM_FONT));
-        final SeekBar fontSeekBar = (SeekBar) v.findViewById(R.id.font_size_bar);
-        fontSeekBar.setProgress(fontSetting);
-        fontSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                currentFont.setText(String.valueOf(MINIMUM_FONT + progress));
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        });
-        AlertDialog dialog = new AlertDialog.Builder(this).setView(v).create();
-        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialog) {
-                int newFont = fontSeekBar.getProgress();
-                if (PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit()
-                        .putInt(FONT_SETTING, newFont).commit())
-                    fragment.setHymnFontSize(newFont + MINIMUM_FONT);
-                else
-                    Toast.makeText(HymnDetailActivity.this,
-                            R.string.error_occurred, Toast.LENGTH_SHORT).show();
-            }
-        });
-        dialog.show();
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void setupWindowAnimations() {
+        //todo work on tihs later
+        //  change for listActivity android:fitsSystemWindows="true"todo
+//        getWindow().requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS);
+//        getWindow().setExitTransition(new Fade().setDuration(3000));
     }
 
     /**
      * reload the hymn with the new language setting
-     *
+     *     todo don't create a new fragment, transition it using animations ;)
      * @param lang new language setting
      */
     private void reloadFragment(int lang) {
@@ -189,5 +155,19 @@ public class HymnDetailActivity extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.hymn_detail_container, fragment)
                 .commit();
+    }
+
+    @Override
+    public void setTitle(CharSequence title) {
+        super.setTitle(title);
+        collapsingToolbarLayout.setTitle(title);
+    }
+
+    /**
+     * sets a given resource id as the background image for the activity's appBar
+     */
+    public void setCollapsingToolbarImage(@DrawableRes int background) {
+//        collapsingToolbarLayout.findViewById(R.id.toolbar_img).setBackgroundResource(background);
+        collapsingToolbarLayout.setBackgroundResource(background);
     }
 }

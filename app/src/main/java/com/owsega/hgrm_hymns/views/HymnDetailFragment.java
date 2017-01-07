@@ -1,23 +1,32 @@
 package com.owsega.hgrm_hymns.views;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.owsega.hgrm_hymns.R;
 import com.owsega.hgrm_hymns.data.HymnsHelper;
 import com.owsega.hgrm_hymns.data.HymnsHelper.Hymn;
 
+import static com.owsega.hgrm_hymns.views.HymnDetailActivity.DEFAULT_FONT_OFFSET;
 import static com.owsega.hgrm_hymns.views.HymnDetailActivity.FONT_SETTING;
 import static com.owsega.hgrm_hymns.views.HymnDetailActivity.MINIMUM_FONT;
+import static com.owsega.hgrm_hymns.views.HymnDetailActivity.action_change_font_size;
 
 /**
  * A fragment representing a single Hymn detail screen.
@@ -60,8 +69,6 @@ public class HymnDetailFragment extends Fragment {
 
             content = mItem.details;
             title = mItem.id + "    " + mItem.title;
-
-            getActivity().setTitle(title);
         }
     }
 
@@ -72,28 +79,50 @@ public class HymnDetailFragment extends Fragment {
         hymnText = ((TextView) view.findViewById(R.id.content));
         hymnText.setText(content);
         hymnText.setTextSize(MINIMUM_FONT + PreferenceManager.getDefaultSharedPreferences(
-                view.getContext()).getInt(FONT_SETTING, 0));
-        ((TextView) view.findViewById(R.id.title)).setText(title);
+                view.getContext()).getInt(FONT_SETTING, DEFAULT_FONT_OFFSET));
+
+        getActivity().setTitle(title);
 
         setBackgroundImages(view);
         hideNoHymnTextView();
 
+        setHasOptionsMenu(true);  // add menu items too!!
+
         return view;
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+        menu.add(1, action_change_font_size, 20, R.string.action_font_size)
+                .setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case action_change_font_size:
+                int fontSetting = PreferenceManager.getDefaultSharedPreferences(getContext())
+                        .getInt(FONT_SETTING, 0);
+                showChangeFontDialog(getContext(), fontSetting);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     private void setBackgroundImages(View rootView) {
-        int random = (int) (Math.random() * 3);
+        int random = (int) (Math.random() * 4);
         int[] backgrounds = new int[]{
                 R.drawable.bg_1,
                 R.drawable.bg_2,
-                R.drawable.bg_3
+                R.drawable.bg_3,
+                R.drawable.bg_4
         };
 
         //set the top background for single-pane mode
-        CollapsingToolbarLayout layout = (CollapsingToolbarLayout) getActivity()
-                .findViewById(R.id.toolbar_layout);
-        if (layout != null)
-            layout.setBackgroundResource(backgrounds[random]);
+        if (getActivity() instanceof HymnDetailActivity)
+            ((HymnDetailActivity) getActivity()).setCollapsingToolbarImage(backgrounds[random]);
 
         // set the background for lyrics pane
         ImageView background = (ImageView) rootView.findViewById(R.id.img_bg);
@@ -117,5 +146,43 @@ public class HymnDetailFragment extends Fragment {
      */
     public void setHymnFontSize(int fontSize) {
         hymnText.setTextSize(fontSize);
+    }
+
+    /**
+     * show an alert dialog for changing the
+     */
+    private void showChangeFontDialog(final Context context, int fontSetting) {
+        View v = LayoutInflater.from(context).inflate(R.layout.hymn_detail_settings, null);
+        final TextView currentFont = (TextView) v.findViewById(R.id.current_font_size);
+        currentFont.setText(String.valueOf(fontSetting + MINIMUM_FONT));
+        final SeekBar fontSeekBar = (SeekBar) v.findViewById(R.id.font_size_bar);
+        fontSeekBar.setProgress(fontSetting);
+        fontSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                currentFont.setText(String.valueOf(MINIMUM_FONT + progress));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+        AlertDialog dialog = new AlertDialog.Builder(context).setView(v).create();
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                int newFont = fontSeekBar.getProgress();
+                if (PreferenceManager.getDefaultSharedPreferences(context).edit()
+                        .putInt(FONT_SETTING, newFont).commit())
+                    setHymnFontSize(newFont + MINIMUM_FONT);
+                else
+                    Toast.makeText(context, R.string.error_occurred, Toast.LENGTH_SHORT).show();
+            }
+        });
+        dialog.show();
     }
 }

@@ -1,16 +1,20 @@
 package com.owsega.hgrm_hymns.views;
 
+import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -85,6 +89,7 @@ public class HymnListActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setupWindowAnimations();
         setContentView(R.layout.activity_hymn_list);
 
         // initialize settings
@@ -137,6 +142,13 @@ public class HymnListActivity extends AppCompatActivity
         fab.hide();
 
 
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void setupWindowAnimations() {
+        //todo uncomment
+//        getWindow().requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS);
+//        getWindow().setExitTransition(new Slide().setDuration(3000));
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
@@ -332,11 +344,14 @@ public class HymnListActivity extends AppCompatActivity
 
             previousSelected = new WeakReference<>(v);
         } else {
-            Context context = v.getContext();
+            Activity context = (Activity) v.getContext();
             Intent intent = new Intent(context, HymnDetailActivity.class);
             intent.putExtra(HymnDetailFragment.ARG_ITEM_ID, _id);
 
-            context.startActivity(intent);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                context.startActivity(intent,
+                        ActivityOptionsCompat.makeSceneTransitionAnimation(context, null).toBundle());
+            } else context.startActivity(intent);
         }
     }
 
@@ -351,7 +366,7 @@ public class HymnListActivity extends AppCompatActivity
 
         Context mContext;
 
-        public HymnCursorAdapter(Context context, Cursor c) {
+        HymnCursorAdapter(Context context, Cursor c) {
 
             mContext = context;
 
@@ -398,12 +413,12 @@ public class HymnListActivity extends AppCompatActivity
             return new ViewHolder(v);
         }
 
-        public class ViewHolder extends RecyclerView.ViewHolder {
-            public final View mView;
-            public final TextView idView;
-            public final TextView titleView;
+        class ViewHolder extends RecyclerView.ViewHolder {
+            final View mView;
+            final TextView idView;
+            final TextView titleView;
 
-            public ViewHolder(View view) {
+            ViewHolder(View view) {
                 super(view);
                 mView = view;
                 idView = (TextView) view.findViewById(R.id.id);

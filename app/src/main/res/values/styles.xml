@@ -10,7 +10,9 @@
         <item name="android:textColorPrimary">@color/colorAccent</item>
         <item name="android:textColorSecondary">@color/secondaryBlue</item>
 
-        <item name="actionMenuTextColor">@color/colorAccent</item>
+        <!--<item name="actionMenuTextColor">@color/colorAccent</item>-->
+        <item name="actionMenuTextColor">@android:color/white</item>
+        <item name="actionMenuTextAppearance">@style/actionMenuTextAppearance</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -21,5 +23,10 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="actionMenuTextAppearance" parent="TextAppearance.AppCompat.Widget.ActionBar.Menu">
+        <item name="android:textSize">@dimen/action_menu_text_size</item>
+        <item name="android:textStyle">bold</item>
+    </style>
 
 </resources>

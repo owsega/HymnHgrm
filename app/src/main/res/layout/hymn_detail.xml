@@ -26,23 +26,11 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/title"
-                style="@style/TextAppearance.AppCompat.Large"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginLeft="@dimen/text_margin"
-                android:layout_marginRight="@dimen/text_margin"
-                android:layout_marginTop="@dimen/text_margin"
-                android:gravity="center" />
-
-            <TextView
                 android:id="@+id/content"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_margin="@dimen/text_margin"
-                android:textSize="@dimen/default_hymn_text_size" />
+                android:layout_margin="@dimen/text_margin" />
         </LinearLayout>
     </android.support.v4.widget.NestedScrollView>
 </RelativeLayout>
