@@ -92,6 +92,12 @@ public class HymnDetailFragment extends Fragment {
 
         setHasOptionsMenu(true);  // add menu items too!!
 
+        // centralize the text, if we are on dual pane mode
+        if (getActivity() instanceof HymnListActivity) {
+            view.findViewById(R.id.space1).setVisibility(View.VISIBLE);
+            view.findViewById(R.id.space2).setVisibility(View.VISIBLE);
+        }
+
         return view;
     }
 

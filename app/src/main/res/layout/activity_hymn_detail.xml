@@ -19,9 +19,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fitsSystemWindows="true"
-            app:contentScrim="?attr/colorPrimary"
+            app:contentScrim="@null"
             app:layout_scrollFlags="scroll|exitUntilCollapsed"
             app:maxLines="5"
+            app:statusBarScrim="@null"
             app:toolbarId="@+id/toolbar">
 
             <android.support.v7.widget.Toolbar

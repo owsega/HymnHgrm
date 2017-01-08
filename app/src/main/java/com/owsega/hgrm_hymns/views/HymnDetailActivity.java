@@ -1,5 +1,6 @@
 package com.owsega.hgrm_hymns.views;
 
+import android.animation.Animator;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
@@ -131,7 +132,6 @@ public class HymnDetailActivity extends AppCompatActivity {
 
     /**
      * reload the hymn with the new language setting
-     * todo don't create a new fragment, transition it using animations ;)
      *
      * @param lang new language setting
      */
@@ -158,10 +158,31 @@ public class HymnDetailActivity extends AppCompatActivity {
     }
 
     /**
-     * sets a given resource id as the background image for the activity's appBar
+     * sets a given resource id as the background image for the activity's appBar.
+     * I animate it manually here
      */
-    public void setCollapsingToolbarImage(@DrawableRes int background) {
-//        collapsingToolbarLayout.findViewById(R.id.toolbar_img).setBackgroundResource(background);
-        collapsingToolbarLayout.setBackgroundResource(background);
+    public void setCollapsingToolbarImage(@DrawableRes final int background) {
+        collapsingToolbarLayout.animate()
+                .alpha(0.8f)
+                .setDuration(150)
+                .setListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        collapsingToolbarLayout.setBackgroundResource(background);
+                        collapsingToolbarLayout.animate().alpha(1).setDuration(150);
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animator animation) {
+                    }
+                });
     }
 }

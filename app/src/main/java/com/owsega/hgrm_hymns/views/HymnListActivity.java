@@ -51,8 +51,6 @@ import static com.owsega.hgrm_hymns.views.HymnDetailActivity.LANG_YORUBA;
  * lead to a {@link HymnDetailActivity} representing
  * hymn lyrics. On tablets, the activity presents the list of hymns and
  * hymn details side-by-side using two vertical panes.
- * <p>
- * todo fix bug whereby when rotation is done from 2-pane mode (where hymn lyrics is already showing on the right side) to single-pane, the app crashes
  */
 public class HymnListActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<Cursor>, View.OnClickListener {
@@ -128,7 +126,9 @@ public class HymnListActivity extends AppCompatActivity
         // The detail container view will be present only in the
         // large-screen layouts (res/values-w900dp).
         // If this view is present, then the activity should be in two-pane mode.
-        mTwoPane = findViewById(R.id.hymn_detail_container) != null;
+        View sidePane = findViewById(R.id.hymn_detail_container);
+        mTwoPane = findViewById(R.id.hymn_detail_container) != null
+                && sidePane.getVisibility() == View.VISIBLE;
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -390,9 +390,12 @@ public class HymnListActivity extends AppCompatActivity
                     title.setText(_title);
                     view.setTag(_id);
                     view.setOnClickListener(HymnListActivity.this);
-                    view.setAlpha(_id == currentHymnId ? 0.6f : 1);
+
+                    if (mTwoPane) {  // highlight the selected hymn title in the list ...
+                        view.setAlpha(_id == currentHymnId ? 0.6f : 1);
 //                    id.setTypeface(null, _id == currentHymnId ? Typeface.BOLD : Typeface.NORMAL);
 //                    title.setTypeface(null, _id == currentHymnId ? Typeface.BOLD : Typeface.NORMAL);
+                    }
                 }
             };
         }
