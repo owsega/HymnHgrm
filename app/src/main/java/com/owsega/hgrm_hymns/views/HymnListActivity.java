@@ -1,19 +1,19 @@
 package com.owsega.hgrm_hymns.views;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager;
@@ -33,11 +33,13 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.owsega.hgrm_hymns.R;
+import com.owsega.hgrm_hymns.Utils;
 import com.owsega.hgrm_hymns.data.HymnContract;
 import com.owsega.hgrm_hymns.data.HymnsHelper;
 
 import java.lang.ref.WeakReference;
 
+import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 import static com.owsega.hgrm_hymns.views.HymnDetailActivity.LANGUAGE_SETTING;
 import static com.owsega.hgrm_hymns.views.HymnDetailActivity.LANG_ENGLISH;
 import static com.owsega.hgrm_hymns.views.HymnDetailActivity.LANG_YORUBA;
@@ -49,14 +51,16 @@ import static com.owsega.hgrm_hymns.views.HymnDetailActivity.LANG_YORUBA;
  * lead to a {@link HymnDetailActivity} representing
  * hymn lyrics. On tablets, the activity presents the list of hymns and
  * hymn details side-by-side using two vertical panes.
+ * <p>
+ * todo fix bug whereby when rotation is done from 2-pane mode (where hymn lyrics is already showing on the right side) to single-pane, the app crashes
  */
 public class HymnListActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<Cursor>, View.OnClickListener {
 
     public static final String PREF_SEARCH_LYRICS = "pref_search_lyrics";
     public static final String PREF_SORT_BY_ID = "sort_by_hymn_id";
-    private static final int HYMN_LOADER_ID = 1;
-    private static final String SEARCH_QUERY = "search_query";
+    public static final int HYMN_LOADER_ID = 1;
+    public static final String SEARCH_QUERY = "search_query";
     private static final String SORT_ALPHABETIC = HymnContract.EnglishEntry.COL_HYMN_TITLE + " ASC";
     private static final String SORT_NUMERIC = HymnContract.EnglishEntry.COL_HYMN_ID + " ASC";
     private static final String SEARCH_TITLES = HymnContract.EnglishEntry.COL_HYMN_TITLE + " LIKE ?";
@@ -69,32 +73,36 @@ public class HymnListActivity extends AppCompatActivity
      */
     private static WeakReference<View> previousSelected = null;
     /**
+     * id of the hymn whose lyrics is currently being displayed.
+     * We need for highlighting in the list, and toggling lyrics language
+     */
+    int currentHymnId = -1;
+    /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
      */
-    private boolean mTwoPane;
+    boolean mTwoPane;
     /**
      * adapter holding the hymns in the list (recyclerView)
      */
-    private HymnCursorAdapter mAdapter;
+    HymnCursorAdapter mAdapter;
     /**
      * array holding the 2 settings stored in SharedPref and shown in Settings Dialog
      */
-    private boolean[] prefs;
+    boolean[] prefs;
     /**
      * holds the search query
      */
-    private Bundle args;
+    Bundle args;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setupWindowAnimations();
         setContentView(R.layout.activity_hymn_list);
 
         // initialize settings
-        SharedPreferences preferences = PreferenceManager
-                .getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences preferences =
+                getDefaultSharedPreferences(getApplicationContext());
         prefs = new boolean[]{
                 preferences.getBoolean(PREF_SEARCH_LYRICS, true),
                 preferences.getBoolean(PREF_SORT_BY_ID, true)
@@ -117,12 +125,10 @@ public class HymnListActivity extends AppCompatActivity
         assert recyclerView != null;
         setupRecyclerView((RecyclerView) recyclerView);
 
-        if (findViewById(R.id.hymn_detail_container) != null) {
-            // The detail container view will be present only in the
-            // large-screen layouts (res/values-w900dp).
-            // If this view is present, then the activity should be in two-pane mode.
-            mTwoPane = true;
-        }
+        // The detail container view will be present only in the
+        // large-screen layouts (res/values-w900dp).
+        // If this view is present, then the activity should be in two-pane mode.
+        mTwoPane = findViewById(R.id.hymn_detail_container) != null;
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -142,13 +148,6 @@ public class HymnListActivity extends AppCompatActivity
         fab.hide();
 
 
-    }
-
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void setupWindowAnimations() {
-        //todo uncomment
-//        getWindow().requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS);
-//        getWindow().setExitTransition(new Slide().setDuration(3000));
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
@@ -182,7 +181,7 @@ public class HymnListActivity extends AppCompatActivity
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        int languageSetting = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+        int languageSetting = getDefaultSharedPreferences(getApplicationContext())
                 .getInt(LANGUAGE_SETTING, LANG_ENGLISH);
 
         Uri uri = languageSetting == LANG_YORUBA ? HymnContract.YorubaEntry.CONTENT_URI
@@ -230,7 +229,7 @@ public class HymnListActivity extends AppCompatActivity
         getMenuInflater().inflate(R.menu.hymn_list, menu);
 
         // add language swapper
-        int languageSetting = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+        int languageSetting = getDefaultSharedPreferences(getApplicationContext())
                 .getInt(LANGUAGE_SETTING, LANG_ENGLISH);
         String menuTitle = (languageSetting == LANG_ENGLISH) ? getString(R.string.action_english)
                 : getString(R.string.action_yoruba);
@@ -247,7 +246,7 @@ public class HymnListActivity extends AppCompatActivity
                 showSettingsDialog();
                 return true;
             case HymnDetailActivity.action_change_language:
-                SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                SharedPreferences pref = getDefaultSharedPreferences(getApplicationContext());
                 int oldSetting = pref.getInt(LANGUAGE_SETTING, LANG_ENGLISH);
 
                 // toggle the setting
@@ -260,7 +259,6 @@ public class HymnListActivity extends AppCompatActivity
                     item.setTitle(R.string.action_english);
                     reloadListAndLyrics(LANG_ENGLISH);
                 }
-
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -271,35 +269,33 @@ public class HymnListActivity extends AppCompatActivity
         getSupportLoaderManager().restartLoader(HYMN_LOADER_ID, args, HymnListActivity.this);
 
         // reload lyrics
-        if (mTwoPane) {
-            int _id = -1;
-            if (previousSelected != null && previousSelected.get() != null)
-                _id = (int) previousSelected.get().getTag();
-
-            if (_id >= 0) {
-                Uri uri = lang == LANG_YORUBA ? HymnContract.YorubaEntry.CONTENT_URI
-                        : HymnContract.EnglishEntry.CONTENT_URI;
-                Bundle arguments = new Bundle();
-                arguments.putParcelable(HymnDetailFragment.ARG_ITEM_URI, uri);
-                arguments.putInt(HymnDetailFragment.ARG_ITEM_ID, _id);
-                HymnDetailFragment fragment = new HymnDetailFragment();
-                fragment.setArguments(arguments);
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.hymn_detail_container, fragment)
-                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                        .commit();
-            }
+        if (mTwoPane && currentHymnId >= 0) {
+            Uri uri = lang == LANG_YORUBA ? HymnContract.YorubaEntry.CONTENT_URI
+                    : HymnContract.EnglishEntry.CONTENT_URI;
+            Bundle arguments = new Bundle();
+            arguments.putParcelable(HymnDetailFragment.ARG_ITEM_URI, uri);
+            arguments.putInt(HymnDetailFragment.ARG_ITEM_ID, currentHymnId);
+            HymnDetailFragment fragment = new HymnDetailFragment();
+            fragment.setArguments(arguments);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.hymn_detail_container, fragment)
+                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                    .commit();
         }
     }
 
     private void showSettingsDialog() {
-        final SharedPreferences.Editor editor = PreferenceManager
-                .getDefaultSharedPreferences(getApplicationContext()).edit();
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
+        // use yoruba resources if we are on yoruba setting on english locale device
+        //  or english resources if we are on yoruba locale device
+        int languageSetting = sharedPref.getInt(LANGUAGE_SETTING, LANG_ENGLISH);
+        Resources resources = Utils.getLanguageResources(this, languageSetting);
         final CharSequence[] options = new CharSequence[]{
-                getString(R.string.pref_search_content),
-                getString(R.string.pref_sort_by_id)};
+                resources.getString(R.string.pref_search_content),
+                resources.getString(R.string.pref_sort_by_id)};
 
+        final SharedPreferences.Editor editor = sharedPref.edit();
         new AlertDialog.Builder(this)
                 .setMultiChoiceItems(options, prefs, new DialogInterface.OnMultiChoiceClickListener() {
                     @Override
@@ -321,11 +317,14 @@ public class HymnListActivity extends AppCompatActivity
     @Override
     public void onClick(View v) {
         int _id = (int) v.getTag();
+        currentHymnId = _id;
+        View transitionView = v.findViewById(R.id.hymn_title);
+        String transitionName = getString(R.string.trans_title);
 
         if (mTwoPane) {
             Bundle arguments = new Bundle();
             arguments.putInt(HymnDetailFragment.ARG_ITEM_ID, _id);
-            int lang = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+            int lang = getDefaultSharedPreferences(getApplicationContext())
                     .getInt(LANGUAGE_SETTING, LANG_ENGLISH);
             Uri uri = lang == LANG_YORUBA ? HymnContract.YorubaEntry.CONTENT_URI
                     : HymnContract.EnglishEntry.CONTENT_URI;
@@ -334,31 +333,32 @@ public class HymnListActivity extends AppCompatActivity
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.hymn_detail_container, fragment)
+                    .addSharedElement(transitionView, transitionName)
                     .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                     .commit();
 
             // de-highlight and do highlight
             if (previousSelected != null && previousSelected.get() != null)
                 previousSelected.get().animate().alpha(1).setDuration(500).start();
-            v.animate().alpha(0.5f).setDuration(500).start();
-
             previousSelected = new WeakReference<>(v);
+            v.animate().alpha(0.5f).setDuration(500).start();
         } else {
             Activity context = (Activity) v.getContext();
             Intent intent = new Intent(context, HymnDetailActivity.class);
             intent.putExtra(HymnDetailFragment.ARG_ITEM_ID, _id);
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                context.startActivity(intent,
-                        ActivityOptionsCompat.makeSceneTransitionAnimation(context, null).toBundle());
-            } else context.startActivity(intent);
+            ActivityCompat.startActivity(context,
+                    intent,
+                    ActivityOptionsCompat.makeSceneTransitionAnimation(context,
+                            transitionView,
+                            transitionName).toBundle());
         }
     }
 
     /**
      * Adapter for items in the fragment's list
      */
-    private class HymnCursorAdapter extends RecyclerView.Adapter<HymnCursorAdapter.ViewHolder> {
+    class HymnCursorAdapter extends RecyclerView.Adapter<HymnCursorAdapter.ViewHolder> {
 
         // PATCH: Because RecyclerView.Adapter in its current form doesn't natively support
         // cursors, we "wrap" a CursorAdapter that will do all the job for us
@@ -390,6 +390,9 @@ public class HymnListActivity extends AppCompatActivity
                     title.setText(_title);
                     view.setTag(_id);
                     view.setOnClickListener(HymnListActivity.this);
+                    view.setAlpha(_id == currentHymnId ? 0.6f : 1);
+//                    id.setTypeface(null, _id == currentHymnId ? Typeface.BOLD : Typeface.NORMAL);
+//                    title.setTypeface(null, _id == currentHymnId ? Typeface.BOLD : Typeface.NORMAL);
                 }
             };
         }
@@ -401,14 +404,14 @@ public class HymnListActivity extends AppCompatActivity
 
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
-            // Passing the binding operation to cursor loader
+            // Passing the binding operation to cursorAdapter
             mCursorAdapter.getCursor().moveToPosition(position);
             mCursorAdapter.bindView(holder.itemView, mContext, mCursorAdapter.getCursor());
         }
 
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            // Passing the inflater job to the cursor-adapter
+            // Passing the inflater job to the cursorAdapter
             View v = mCursorAdapter.newView(mContext, mCursorAdapter.getCursor(), parent);
             return new ViewHolder(v);
         }

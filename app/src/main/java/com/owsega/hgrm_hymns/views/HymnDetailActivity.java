@@ -1,16 +1,13 @@
 package com.owsega.hgrm_hymns.views;
 
-import android.annotation.TargetApi;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.DrawableRes;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.NavUtils;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -47,7 +44,6 @@ public class HymnDetailActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setupWindowAnimations();
         setContentView(R.layout.activity_hymn_detail);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);  // keep scree on while user reads hymn
@@ -108,9 +104,6 @@ public class HymnDetailActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case android.R.id.home:
-                NavUtils.navigateUpTo(this, new Intent(this, HymnListActivity.class));
-                return true;
             case action_change_language:
                 SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
                 int oldSetting = pref.getInt(LANGUAGE_SETTING, LANG_ENGLISH);
@@ -130,17 +123,16 @@ public class HymnDetailActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void setupWindowAnimations() {
-        //todo work on tihs later
-        //  change for listActivity android:fitsSystemWindows="true"todo
-//        getWindow().requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS);
-//        getWindow().setExitTransition(new Fade().setDuration(3000));
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
     }
 
     /**
      * reload the hymn with the new language setting
-     *     todo don't create a new fragment, transition it using animations ;)
+     * todo don't create a new fragment, transition it using animations ;)
+     *
      * @param lang new language setting
      */
     private void reloadFragment(int lang) {
@@ -154,6 +146,8 @@ public class HymnDetailActivity extends AppCompatActivity {
         fragment.setArguments(arguments);
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.hymn_detail_container, fragment)
+                .addSharedElement(findViewById(R.id.content), getString(R.string.trans_title))
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .commit();
     }
 

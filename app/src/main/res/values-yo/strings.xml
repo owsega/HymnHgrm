@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Awon Orin Emi</string>
+    <string name="description">Awon Orin Emi fun Okan (Iwe Orin ti Holy Ghost Revival Mission)</string>
+
+    <string name="title_hymn_list">Awon Orin Emi</string>
+    <string name="title_hymn_detail">Oro Orin</string>
+    <string name="no_hymn_selected">Jowo, mu orin kan ninu awon orin ti o wa legbe</string>
+    <string name="action_settings">Eto</string>
+    <string name="pref_search_content">Wa a laarin oro orin pelu</string>
+    <string name="pref_sort_by_id">Fi onka orin to o</string>
+    <string name="please_wait">Jowo duro</string>
+    <string name="loading_hymns">A n pese awon orin emi sile fun igba akoko</string>
+
+    <string name="action_font_size">Jeki oro orin tobi tabi kekere si i</string>
+    <string name="error_occurred">Nkan ti daru</string>
+
+</resources>

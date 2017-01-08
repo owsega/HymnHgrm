@@ -17,4 +17,7 @@
     <string name="action_font_size">Change Font Size</string>
     <string name="error_occurred">An error occurred</string>
 
+    <!-- transition names  ... not to be translated-->
+    <string name="trans_title">title</string>
+
 </resources>

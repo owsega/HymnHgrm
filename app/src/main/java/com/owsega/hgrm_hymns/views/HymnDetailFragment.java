@@ -2,6 +2,7 @@ package com.owsega.hgrm_hymns.views;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -20,11 +21,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.owsega.hgrm_hymns.R;
+import com.owsega.hgrm_hymns.Utils;
 import com.owsega.hgrm_hymns.data.HymnsHelper;
 import com.owsega.hgrm_hymns.data.HymnsHelper.Hymn;
 
 import static com.owsega.hgrm_hymns.views.HymnDetailActivity.DEFAULT_FONT_OFFSET;
 import static com.owsega.hgrm_hymns.views.HymnDetailActivity.FONT_SETTING;
+import static com.owsega.hgrm_hymns.views.HymnDetailActivity.LANGUAGE_SETTING;
+import static com.owsega.hgrm_hymns.views.HymnDetailActivity.LANG_ENGLISH;
 import static com.owsega.hgrm_hymns.views.HymnDetailActivity.MINIMUM_FONT;
 import static com.owsega.hgrm_hymns.views.HymnDetailActivity.action_change_font_size;
 
@@ -100,6 +104,19 @@ public class HymnDetailFragment extends Fragment {
     }
 
     @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+
+        Resources resources = Utils.getLanguageResources(getContext(),
+                PreferenceManager.getDefaultSharedPreferences(getContext())
+                        .getInt(LANGUAGE_SETTING, LANG_ENGLISH));
+
+        MenuItem font = menu.findItem(action_change_font_size);
+        font.setTitle(resources.getString(R.string.action_font_size));
+
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case action_change_font_size:
@@ -152,7 +169,13 @@ public class HymnDetailFragment extends Fragment {
      * show an alert dialog for changing the
      */
     private void showChangeFontDialog(final Context context, int fontSetting) {
+        final Resources resources = Utils.getLanguageResources(context,
+                PreferenceManager.getDefaultSharedPreferences(context)
+                        .getInt(LANGUAGE_SETTING, LANG_ENGLISH));
+
         View v = LayoutInflater.from(context).inflate(R.layout.hymn_detail_settings, null);
+        TextView titleTextView = (TextView) v.findViewById(R.id.current_font_title);
+        titleTextView.setText(resources.getString(R.string.action_font_size));
         final TextView currentFont = (TextView) v.findViewById(R.id.current_font_size);
         currentFont.setText(String.valueOf(fontSetting + MINIMUM_FONT));
         final SeekBar fontSeekBar = (SeekBar) v.findViewById(R.id.font_size_bar);
@@ -180,7 +203,7 @@ public class HymnDetailFragment extends Fragment {
                         .putInt(FONT_SETTING, newFont).commit())
                     setHymnFontSize(newFont + MINIMUM_FONT);
                 else
-                    Toast.makeText(context, R.string.error_occurred, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, resources.getString(R.string.error_occurred), Toast.LENGTH_SHORT).show();
             }
         });
         dialog.show();
