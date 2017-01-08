@@ -14,25 +14,36 @@
         tools:ignore="ContentDescription"
         tools:src="@drawable/bg_1" />
 
-    <android.support.v4.widget.NestedScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scrollbars="vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:orientation="vertical">
 
-        <LinearLayout
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <android.support.v4.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:scrollbars="vertical"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
             <TextView
                 android:id="@+id/content"
-                android:transitionName="@string/trans_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_margin="@dimen/text_margin"
-                android:textStyle="bold" />
-        </LinearLayout>
-    </android.support.v4.widget.NestedScrollView>
+                android:textStyle="bold"
+                android:transitionName="@string/trans_title" />
+        </android.support.v4.widget.NestedScrollView>
+
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+    </LinearLayout>
 </RelativeLayout>
