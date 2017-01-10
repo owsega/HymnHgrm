@@ -152,8 +152,6 @@ public class HymnListActivity extends AppCompatActivity
         });
 //        if (!mTwoPane)
         fab.hide();
-
-
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {

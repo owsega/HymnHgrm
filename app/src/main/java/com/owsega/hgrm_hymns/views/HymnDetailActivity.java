@@ -1,6 +1,5 @@
 package com.owsega.hgrm_hymns.views;
 
-import android.animation.Animator;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
@@ -18,6 +17,7 @@ import android.view.View;
 import android.view.WindowManager;
 
 import com.owsega.hgrm_hymns.R;
+import com.owsega.hgrm_hymns.Utils;
 import com.owsega.hgrm_hymns.data.HymnContract;
 
 import net.opacapp.multilinecollapsingtoolbar.CollapsingToolbarLayout;
@@ -42,6 +42,8 @@ public class HymnDetailActivity extends AppCompatActivity {
     HymnDetailFragment fragment;
     CollapsingToolbarLayout collapsingToolbarLayout;
 
+    private int backgroundImageResId;   // background image of the collapsingToolbar and lyrics
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,6 +54,7 @@ public class HymnDetailActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
+        setupBackgroundImage();
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         assert fab != null;
@@ -157,32 +160,16 @@ public class HymnDetailActivity extends AppCompatActivity {
         collapsingToolbarLayout.setTitle(title);
     }
 
+    private void setupBackgroundImage() {
+        collapsingToolbarLayout.setBackgroundResource(
+                backgroundImageResId = Utils.getRandomBackgroundImg());
+    }
+
+    @DrawableRes
     /**
-     * sets a given resource id as the background image for the activity's appBar.
-     * I animate it manually here
+     * returns the image resource id of the current background of the activity.
      */
-    public void setCollapsingToolbarImage(@DrawableRes final int background) {
-        collapsingToolbarLayout.animate()
-                .alpha(0.8f)
-                .setDuration(250)
-                .setListener(new Animator.AnimatorListener() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        collapsingToolbarLayout.setBackgroundResource(background);
-                        collapsingToolbarLayout.animate().alpha(1).setDuration(250);
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animator animation) {
-                    }
-                });
+    public int getBackgroundImage() {
+        return backgroundImageResId;
     }
 }

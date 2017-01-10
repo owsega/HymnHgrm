@@ -87,7 +87,7 @@ public class HymnDetailFragment extends Fragment {
 
         getActivity().setTitle(title);
 
-        setBackgroundImages(view);
+        setBackgroundForLyrics(view);
         hideNoHymnTextView();
 
         setHasOptionsMenu(true);  // add menu items too!!
@@ -134,22 +134,13 @@ public class HymnDetailFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
-    private void setBackgroundImages(View rootView) {
-        int random = (int) (Math.random() * 4);
-        int[] backgrounds = new int[]{
-                R.drawable.bg_1,
-                R.drawable.bg_2,
-                R.drawable.bg_3,
-                R.drawable.bg_4
-        };
-
-        //set the top background for single-pane mode
-        if (getActivity() instanceof HymnDetailActivity)
-            ((HymnDetailActivity) getActivity()).setCollapsingToolbarImage(backgrounds[random]);
-
+    private void setBackgroundForLyrics(View rootView) {
         // set the background for lyrics pane
         ImageView background = (ImageView) rootView.findViewById(R.id.img_bg);
-        background.setBackgroundResource(backgrounds[random]);
+        if (getActivity() instanceof HymnDetailActivity)  // single pane uses the collapsingToolbar's image
+            background.setBackgroundResource(((HymnDetailActivity) getActivity()).getBackgroundImage());
+        else
+            background.setBackgroundResource(Utils.getRandomBackgroundImg());
     }
 
     private void hideNoHymnTextView() {

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Build;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -18,9 +19,22 @@ public class Utils {
 
     private final static String YORUBA_LOCALE = "yo";
     private final static String ENGLISH_LOCALE = "en";
-
+    private static int[] backgrounds = new int[]{
+            R.drawable.bg_1,
+            R.drawable.bg_2,
+            R.drawable.bg_3,
+            R.drawable.bg_4
+    };
     private static Resources englishRes;
     private static Resources yorubaRes;
+
+    /**
+     * @return the resource id of a random background image
+     */
+    @DrawableRes
+    public static int getRandomBackgroundImg() {
+        return backgrounds[(int) (Math.random() * backgrounds.length)];
+    }
 
     /**
      * Works if the api level is greater or equal to 17.
