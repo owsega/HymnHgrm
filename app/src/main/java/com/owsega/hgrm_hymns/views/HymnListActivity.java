@@ -22,6 +22,7 @@ import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
@@ -33,6 +34,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.owsega.hgrm_hymns.R;
+import com.owsega.hgrm_hymns.RecyclerViewFastScroller;
 import com.owsega.hgrm_hymns.Utils;
 import com.owsega.hgrm_hymns.data.HymnContract;
 import com.owsega.hgrm_hymns.data.HymnsHelper;
@@ -40,6 +42,10 @@ import com.owsega.hgrm_hymns.data.HymnsHelper;
 import java.lang.ref.WeakReference;
 
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
+import static com.owsega.hgrm_hymns.data.HymnContract.EnglishEntry.COL_HYMN_CONTENT;
+import static com.owsega.hgrm_hymns.data.HymnContract.EnglishEntry.COL_HYMN_ID;
+import static com.owsega.hgrm_hymns.data.HymnContract.EnglishEntry.COL_HYMN_TITLE;
+import static com.owsega.hgrm_hymns.data.HymnContract.EnglishEntry.CONTENT_URI;
 import static com.owsega.hgrm_hymns.views.HymnDetailActivity.LANGUAGE_SETTING;
 import static com.owsega.hgrm_hymns.views.HymnDetailActivity.LANG_ENGLISH;
 import static com.owsega.hgrm_hymns.views.HymnDetailActivity.LANG_YORUBA;
@@ -59,11 +65,11 @@ public class HymnListActivity extends AppCompatActivity
     public static final String PREF_SORT_BY_ID = "sort_by_hymn_id";
     public static final int HYMN_LOADER_ID = 1;
     public static final String SEARCH_QUERY = "search_query";
-    private static final String SORT_ALPHABETIC = HymnContract.EnglishEntry.COL_HYMN_TITLE + " ASC";
-    private static final String SORT_NUMERIC = HymnContract.EnglishEntry.COL_HYMN_ID + " ASC";
-    private static final String SEARCH_TITLES = HymnContract.EnglishEntry.COL_HYMN_TITLE + " LIKE ?";
-    private static final String SEARCH_LYRICS = HymnContract.EnglishEntry.COL_HYMN_CONTENT + " LIKE ?";
-    private static final String SEARCH_IDS = HymnContract.EnglishEntry.COL_HYMN_ID + " LIKE ?";
+    private static final String SORT_ALPHABETIC = COL_HYMN_TITLE + " ASC";
+    private static final String SORT_NUMERIC = COL_HYMN_ID + " ASC";
+    private static final String SEARCH_TITLES = COL_HYMN_TITLE + " LIKE ?";
+    private static final String SEARCH_LYRICS = COL_HYMN_CONTENT + " LIKE ?";
+    private static final String SEARCH_IDS = COL_HYMN_ID + " LIKE ?";
 
     /**
      * previously selected view
@@ -151,6 +157,31 @@ public class HymnListActivity extends AppCompatActivity
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
+        recyclerView.setHasFixedSize(true);
+
+        final RecyclerViewFastScroller fastScroller = (RecyclerViewFastScroller) findViewById(R.id.fast_scroller);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false) {
+            @Override
+            public void onLayoutChildren(final RecyclerView.Recycler recycler, final RecyclerView.State state) {
+                super.onLayoutChildren(recycler, state);
+                final int firstVisibleItemPosition = findFirstVisibleItemPosition();
+                if (firstVisibleItemPosition != 0) {
+                    // this avoids trying to handle un-needed calls
+                    if (firstVisibleItemPosition == -1)
+                        //not initialized, or no items shown, so hide fast-scroller
+                        fastScroller.setVisibility(View.GONE);
+                    return;
+                }
+                final int lastVisibleItemPosition = findLastVisibleItemPosition();
+                int itemsShown = lastVisibleItemPosition - firstVisibleItemPosition + 1;
+                // if all items are shown, hide the fast-scroller
+                fastScroller.setVisibility(mAdapter.getItemCount() > itemsShown ? View.VISIBLE : View.GONE);
+            }
+        });
+        fastScroller.setRecyclerView(recyclerView);
+        fastScroller.setViewsToUse(R.layout.recycler_view_fast_scroller__fast_scroller,
+                R.id.fastscroller_bubble, R.id.fastscroller_handle);
+
         mAdapter = new HymnCursorAdapter(HymnListActivity.this, null);
         recyclerView.setAdapter(mAdapter);
     }
@@ -185,7 +216,7 @@ public class HymnListActivity extends AppCompatActivity
                 .getInt(LANGUAGE_SETTING, LANG_ENGLISH);
 
         Uri uri = languageSetting == LANG_YORUBA ? HymnContract.YorubaEntry.CONTENT_URI
-                : HymnContract.EnglishEntry.CONTENT_URI;
+                : CONTENT_URI;
 
         // this variable will be re-used heavily in this function, hope you can keep up ;)
         // I did this so it can always fall back to null ... because when selection is null we
@@ -271,7 +302,7 @@ public class HymnListActivity extends AppCompatActivity
         // reload lyrics
         if (mTwoPane && currentHymnId >= 0) {
             Uri uri = lang == LANG_YORUBA ? HymnContract.YorubaEntry.CONTENT_URI
-                    : HymnContract.EnglishEntry.CONTENT_URI;
+                    : CONTENT_URI;
             Bundle arguments = new Bundle();
             arguments.putParcelable(HymnDetailFragment.ARG_ITEM_URI, uri);
             arguments.putInt(HymnDetailFragment.ARG_ITEM_ID, currentHymnId);
@@ -327,7 +358,7 @@ public class HymnListActivity extends AppCompatActivity
             int lang = getDefaultSharedPreferences(getApplicationContext())
                     .getInt(LANGUAGE_SETTING, LANG_ENGLISH);
             Uri uri = lang == LANG_YORUBA ? HymnContract.YorubaEntry.CONTENT_URI
-                    : HymnContract.EnglishEntry.CONTENT_URI;
+                    : CONTENT_URI;
             arguments.putParcelable(HymnDetailFragment.ARG_ITEM_URI, uri);
             HymnDetailFragment fragment = new HymnDetailFragment();
             fragment.setArguments(arguments);
@@ -358,7 +389,8 @@ public class HymnListActivity extends AppCompatActivity
     /**
      * Adapter for items in the fragment's list
      */
-    class HymnCursorAdapter extends RecyclerView.Adapter<HymnCursorAdapter.ViewHolder> {
+    class HymnCursorAdapter extends RecyclerView.Adapter<HymnCursorAdapter.ViewHolder>
+            implements RecyclerViewFastScroller.BubbleTextGetter {
 
         // PATCH: Because RecyclerView.Adapter in its current form doesn't natively support
         // cursors, we "wrap" a CursorAdapter that will do all the job for us
@@ -380,8 +412,8 @@ public class HymnListActivity extends AppCompatActivity
 
                 @Override
                 public void bindView(View view, Context context, Cursor cursor) {
-                    final int _id = cursor.getInt(cursor.getColumnIndex(HymnContract.EnglishEntry.COL_HYMN_ID));
-                    String _title = cursor.getString(cursor.getColumnIndex(HymnContract.EnglishEntry.COL_HYMN_TITLE));
+                    final int _id = cursor.getInt(cursor.getColumnIndex(COL_HYMN_ID));
+                    String _title = cursor.getString(cursor.getColumnIndex(COL_HYMN_TITLE));
 
                     TextView id = (TextView) view.findViewById(R.id.id);
                     TextView title = (TextView) view.findViewById(R.id.hymn_title);
@@ -408,8 +440,8 @@ public class HymnListActivity extends AppCompatActivity
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
             // Passing the binding operation to cursorAdapter
-            mCursorAdapter.getCursor().moveToPosition(position);
-            mCursorAdapter.bindView(holder.itemView, mContext, mCursorAdapter.getCursor());
+            if (mCursorAdapter.getCursor().moveToPosition(position))
+                mCursorAdapter.bindView(holder.itemView, mContext, mCursorAdapter.getCursor());
         }
 
         @Override
@@ -417,6 +449,19 @@ public class HymnListActivity extends AppCompatActivity
             // Passing the inflater job to the cursorAdapter
             View v = mCursorAdapter.newView(mContext, mCursorAdapter.getCursor(), parent);
             return new ViewHolder(v);
+        }
+
+        @Override
+        public String getTextToShowInBubble(int pos) {
+            Cursor cursor = mCursorAdapter.getCursor();
+            if (cursor.moveToPosition(pos)) {
+                if (prefs[1])    // if sorting numerically
+                    return Integer.toString(cursor.getInt(cursor.getColumnIndex(COL_HYMN_ID)));
+                else             // else if sorting alphabetically
+                    return Character.toString(cursor.getString(cursor.getColumnIndex(COL_HYMN_TITLE))
+                            .charAt(0));
+            }
+            return "";
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {

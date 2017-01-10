@@ -15,17 +15,25 @@
     This layout is a two-pane layout for the Hymns master/detail flow.
     -->
 
-    <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/hymn_list"
+    <FrameLayout
         android:layout_width="@dimen/item_width"
         android:layout_height="match_parent"
         android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:scrollbars="vertical"
-        app:layoutManager="LinearLayoutManager"
-        tools:context=".views.HymnListActivity"
-        tools:listitem="@layout/hymn_list_content" />
+        android:layout_marginRight="16dp">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/hymn_list"
+            android:layout_width="@dimen/item_width"
+            android:layout_height="match_parent"
+            android:scrollbars="none"
+            tools:context=".views.HymnListActivity"
+            tools:listitem="@layout/hymn_list_content" />
+
+        <com.owsega.hgrm_hymns.RecyclerViewFastScroller
+            android:id="@+id/fast_scroller"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
 
     <FrameLayout
         android:id="@+id/hymn_detail_container"

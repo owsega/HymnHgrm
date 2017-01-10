@@ -164,7 +164,7 @@ public class HymnDetailActivity extends AppCompatActivity {
     public void setCollapsingToolbarImage(@DrawableRes final int background) {
         collapsingToolbarLayout.animate()
                 .alpha(0.8f)
-                .setDuration(150)
+                .setDuration(250)
                 .setListener(new Animator.AnimatorListener() {
                     @Override
                     public void onAnimationStart(Animator animation) {
@@ -173,7 +173,7 @@ public class HymnDetailActivity extends AppCompatActivity {
                     @Override
                     public void onAnimationEnd(Animator animation) {
                         collapsingToolbarLayout.setBackgroundResource(background);
-                        collapsingToolbarLayout.animate().alpha(1).setDuration(150);
+                        collapsingToolbarLayout.animate().alpha(1).setDuration(250);
                     }
 
                     @Override
